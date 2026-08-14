@@ -1,9 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-// Prisma 7 requires the URL to be passed directly into the constructor
-const prisma = new PrismaClient({
-  datasourceUrl: process.env.DATABASE_URL
-});
 
 const submitVerification = async (req, res) => {
   try {
