@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  TOURIST
+  GUIDE
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  name               String
+  email              String              @unique
+  password           String
+  role               Role                @default(TOURIST)
+  isVerified         Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  
+  // Relation for Guide Verification
+  guideVerification  GuideVerification?
+}
+
+model GuideVerification {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @unique @db.ObjectId
+  user                User               @relation(fields: [userId], references: [id])
+  universityName      String
+  studentIdNumber     String
+  studentIdCardUrl    String             // Path to uploaded student ID image
+  nidOrPassportNumber String
+  nidOrPassportUrl    String             // Path to uploaded NID/Passport image
+  status              VerificationStatus @default(PENDING)
+  rejectionReason     String?
+  submittedAt         DateTime           @default(now())
+  reviewedAt          DateTime?
+}
