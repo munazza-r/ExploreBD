@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-check-pending">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     body { font-family: 'Poppins', sans-serif; }
+    .auth-check-pending body { visibility: hidden; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-900 pb-16">
@@ -38,7 +39,7 @@
           <a href="index.html" style="color:rgba(255,255,255,0.7);text-decoration:none;font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:500;padding:7px 14px;border-radius:8px;position:relative;transition:all 0.25s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">Home</a>
           <a href="guide-profile.html" style="color:#6ee7b7;text-decoration:none;font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:600;padding:7px 14px;border-radius:8px;background:rgba(110,231,183,0.12);border-bottom:2px solid #6ee7b7;">My Profile</a>
           <a href="register.html" style="color:rgba(255,255,255,0.7);text-decoration:none;font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:500;padding:7px 14px;border-radius:8px;position:relative;transition:all 0.25s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">Bookings</a>
-          <a href="login.html" style="color:rgba(255,255,255,0.7);text-decoration:none;font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:500;padding:7px 14px;border-radius:8px;position:relative;transition:all 0.25s;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">Messages</a>
+          <button type="button" onclick="logout()" style="color:rgba(255,255,255,0.7);font-family:'Poppins',sans-serif;font-size:0.82rem;font-weight:500;padding:7px 14px;border-radius:8px;transition:all 0.25s;background:transparent;border:0;cursor:pointer;" onmouseover="this.style.color='#fff';this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.color='rgba(255,255,255,0.7)';this.style.background='transparent'">Sign Out</button>
         </div>
 
         <!-- User Profile Avatar -->
@@ -49,7 +50,7 @@
           </button>
           
           <div class="guide-dp-img w-10 h-10 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center ring-2 ring-emerald-400/30 overflow-hidden shadow-sm">
-            <span>MR</span>
+            <span>G</span>
           </div>
         </div>
 
@@ -70,17 +71,17 @@
       <div class="flex items-center space-x-3">
         <div class="bg-emerald-900/60 backdrop-blur-md border border-emerald-500/30 rounded-xl px-4 py-2.5 text-center text-white min-w-[90px]">
           <span class="text-[10px] text-emerald-200 block font-semibold">Tours Done</span>
-          <span class="text-2xl font-black">142</span>
+          <span id="toursDoneText" class="text-2xl font-black">0</span>
         </div>
         <div class="bg-emerald-900/60 backdrop-blur-md border border-emerald-500/30 rounded-xl px-4 py-2.5 text-center text-white min-w-[90px]">
           <span class="text-[10px] text-emerald-200 block font-semibold">Avg Rating</span>
           <span class="text-2xl font-black flex items-center justify-center space-x-1">
-            <span>4.9</span> <span class="text-amber-400 text-sm">★</span>
+            <span id="avgRatingText">0.0</span> <span class="text-amber-400 text-sm">★</span>
           </span>
         </div>
         <div class="bg-emerald-900/60 backdrop-blur-md border border-emerald-500/30 rounded-xl px-4 py-2.5 text-center text-white min-w-[90px]">
           <span class="text-[10px] text-emerald-200 block font-semibold">Repeat Clients</span>
-          <span class="text-2xl font-black">78%</span>
+          <span id="repeatClientText" class="text-2xl font-black">0%</span>
         </div>
       </div>
 
@@ -96,7 +97,7 @@
       <!-- Circular Avatar (Click to upload DP) (#5) -->
       <div class="relative group cursor-pointer" onclick="document.getElementById('dpFileInput').click()" title="Click to upload profile picture">
         <div class="guide-dp-img w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-emerald-700 text-white font-extrabold text-3xl flex items-center justify-center border-4 border-white shadow-xl ring-4 ring-emerald-600/20 overflow-hidden">
-          <span>MR</span>
+          <span>G</span>
         </div>
         <div class="absolute inset-0 bg-black/40 rounded-full flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold">
           <i data-lucide="camera" class="w-5 h-5 mb-1"></i>
@@ -106,11 +107,11 @@
       <input type="file" id="dpFileInput" accept="image/*" class="hidden" onchange="handleDpChange(event)">
 
       <div class="flex items-center space-x-2 pt-6">
-        <span class="inline-flex items-center space-x-1 px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full border border-emerald-300">
+        <span id="verifiedGuideBadge" class="hidden items-center space-x-1 px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-full border border-emerald-300">
           <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
           <span>Verified Guide</span>
         </span>
-        <span class="inline-flex items-center space-x-1 px-3 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-300">
+        <span id="topRatedBadge" class="hidden items-center space-x-1 px-3 py-1 bg-amber-50 text-amber-800 text-xs font-bold rounded-full border border-amber-300">
           <i data-lucide="star" class="w-4 h-4 text-amber-500"></i>
           <span>Top Rated</span>
         </span>
@@ -122,8 +123,8 @@
     <div id="toastAlert" class="hidden mb-6 p-4 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-emerald-900 flex items-center space-x-3 shadow-md">
       <i data-lucide="check-circle-2" class="w-6 h-6 text-emerald-600"></i>
       <div>
-        <p class="font-bold text-sm">Profile updated successfully!</p>
-        <p class="text-xs text-emerald-700">Changes saved to ExploreBD database.</p>
+        <p id="toastTitle" class="font-bold text-sm">Profile updated successfully!</p>
+        <p id="toastMessage" class="text-xs text-emerald-700">Changes saved to ExploreBD.</p>
       </div>
     </div>
 
@@ -138,23 +139,23 @@
           <div class="space-y-4">
             <div>
               <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Guide Full Name</label>
-              <input id="guideName" type="text" value="Md. Muntasir Rahman" class="w-full text-2xl font-bold text-slate-900 border-b-2 border-slate-200 focus:border-emerald-600 focus:outline-none py-1 bg-transparent">
+              <input id="guideName" type="text" value="" class="w-full text-2xl font-bold text-slate-900 border-b-2 border-slate-200 focus:border-emerald-600 focus:outline-none py-1 bg-transparent">
             </div>
 
             <div class="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600">
               <div class="flex items-center space-x-1 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200">
                 <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600"></i>
-                <input id="guideLocation" type="text" value="Dhaka, Bangladesh" class="bg-transparent focus:outline-none font-bold text-slate-800">
+                <input id="guideLocation" type="text" value="" class="bg-transparent focus:outline-none font-bold text-slate-800">
               </div>
               <div class="flex items-center space-x-1 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200">
                 <i data-lucide="globe" class="w-3.5 h-3.5 text-teal-600"></i>
-                <input id="guideLanguages" type="text" value="Bengali, English, Hindi" class="bg-transparent focus:outline-none font-bold text-slate-800">
+                <input id="guideLanguages" type="text" value="" class="bg-transparent focus:outline-none font-bold text-slate-800">
               </div>
             </div>
 
             <div>
               <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Professional Bio</label>
-              <textarea id="guideBio" rows="4" class="w-full text-sm text-slate-700 leading-relaxed p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50">Certified nature and heritage guide with 8+ years exploring Bangladesh's most iconic destinations — from the Sundarbans mangrove forest to the ancient mosque city of Bagerhat and the hill tracts of Bandarban. Passionate about authentic, sustainable tourism.</textarea>
+              <textarea id="guideBio" rows="4" placeholder="Tell travelers about your experience and interests..." class="w-full text-sm text-slate-700 leading-relaxed p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-slate-50/50"></textarea>
             </div>
           </div>
         </div>
@@ -165,7 +166,7 @@
           
           <div class="flex items-center space-x-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
             <span class="text-2xl font-black text-slate-800">৳</span>
-            <input id="hourlyRateInput" type="number" value="650" class="w-full text-2xl font-extrabold text-slate-900 bg-transparent focus:outline-none" oninput="calculateFee()">
+            <input id="hourlyRateInput" type="number" min="0" value="500" class="w-full text-2xl font-extrabold text-slate-900 bg-transparent focus:outline-none" oninput="calculateFee()">
             <span class="text-slate-400 font-semibold text-sm">/ hour</span>
           </div>
 

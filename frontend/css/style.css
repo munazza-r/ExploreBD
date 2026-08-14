@@ -20,12 +20,12 @@ body {
 /* Travel Background Overlay */
 .travel-bg-overlay {
   background: linear-gradient(135deg, rgba(4, 120, 87, 0.95) 0%, rgba(5, 150, 105, 0.9) 50%, rgba(13, 148, 136, 0.95) 100%),
-              url('images/sundarban.jpg') center/cover no-repeat;
+              url('../images/sundarban.jpg') center/cover no-repeat;
 }
 
 .auth-bg-overlay {
   background: linear-gradient(135deg, rgba(2, 44, 34, 0.92) 0%, rgba(4, 120, 87, 0.88) 50%, rgba(15, 23, 42, 0.94) 100%),
-              url('images/coxsbazar.jpg') center/cover no-repeat;
+              url('../images/coxsbazar.jpg') center/cover no-repeat;
 }
 
 /* Card glassmorphism */

@@ -46,26 +46,19 @@
         <p class="text-xs text-slate-500 mt-1">Manage your guide profile or discover local tours</p>
       </div>
 
-      <!-- Quick Demo Login Box -->
-      <div class="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-center">
-        <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 block mb-2">⚡ Quick Demo Login Credentials</span>
-        <button type="button" onclick="fillDemo()" class="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-extrabold rounded-xl shadow-xs transition-all">
-          Sign In as Muntasir Rahman (Guide)
-        </button>
-      </div>
-
       <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div id="loginMessage" class="hidden p-3 rounded-xl text-xs font-bold" role="alert"></div>
         <div>
           <label class="text-xs font-bold text-slate-700 block mb-1">Email Address</label>
-          <input id="loginEmail" type="email" required value="muntasir@explorebd.com" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <input id="loginEmail" type="email" required autocomplete="email" placeholder="you@example.com" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
         </div>
 
         <div>
           <label class="text-xs font-bold text-slate-700 block mb-1">Password</label>
-          <input id="loginPassword" type="password" required value="password123" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+          <input id="loginPassword" type="password" required autocomplete="current-password" class="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none">
         </div>
 
-        <button type="submit" class="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-sm rounded-xl shadow-md transition-all">
+        <button id="loginSubmitBtn" type="submit" class="w-full py-4 bg-emerald-700 hover:bg-emerald-800 disabled:bg-slate-400 text-white font-extrabold text-sm rounded-xl shadow-md transition-all">
           Sign In
         </button>
       </form>
@@ -149,14 +142,36 @@
   <script>
     lucide.createIcons();
 
-    function fillDemo() {
-      document.getElementById('loginEmail').value = 'muntasir@explorebd.com';
-      document.getElementById('loginPassword').value = 'password123';
-    }
-
     async function handleLogin(e) {
       e.preventDefault();
-      window.location.href = 'guide-profile.html';
+      const message = document.getElementById('loginMessage');
+      const submitBtn = document.getElementById('loginSubmitBtn');
+      message.className = 'hidden';
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Signing in...';
+
+      try {
+        const response = await fetch('http://localhost:5001/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value.trim(),
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Sign in failed');
+
+        localStorage.setItem('explorebdAuth', JSON.stringify({ token: data.token, user: data.user }));
+        window.location.replace(data.user.role === 'GUIDE' ? 'guide-profile.html' : 'index.html');
+      } catch (error) {
+        message.textContent = error.message === 'Failed to fetch'
+          ? 'Backend server is not running. Start it on port 5001 and try again.'
+          : error.message;
+        message.className = 'p-3 rounded-xl text-xs font-bold bg-red-50 text-red-700 border border-red-200';
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Sign In';
+      }
     }
   </script>
 </body>

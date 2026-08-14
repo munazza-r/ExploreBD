@@ -1,59 +1,151 @@
-// ExploreBD Guide Profile Management JS
+// ExploreBD authenticated guide profile management
 
-let specialtiesList = [
-  'Sundarbans',
-  'Bagerhat',
-  "Cox's Bazar",
-  'Bandarban',
-  'Rangamati',
-  'Sreemangal',
-  'Old Dhaka',
-  'River Cruises'
-];
+const API_BASE = 'http://localhost:5001/api';
+const AUTH_STORAGE_KEY = 'explorebdAuth';
 
+let specialtiesList = [];
 let currentAvatarUrl = '';
 let isPublic = true;
+let authState = readAuthState();
 
-// Initialize profile on page load
-document.addEventListener('DOMContentLoaded', () => {
-  renderSpecialties();
-  calculateFee();
+if (!authState?.token || authState?.user?.role !== 'GUIDE') {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  window.location.replace('login.html');
+}
+
+function readAuthState() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function authHeaders(includeJson = false) {
+  return {
+    ...(includeJson ? { 'Content-Type': 'application/json' } : {}),
+    Authorization: `Bearer ${authState?.token || ''}`
+  };
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!authState?.token || authState?.user?.role !== 'GUIDE') return;
+
+  const input = document.getElementById('newSpecialtyInput');
+  input?.addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      addSpecialty();
+    }
+  });
+
+  await loadProfile();
 });
 
-// 1. Fee Calculator (12% Fee)
+async function loadProfile() {
+  try {
+    const response = await fetch(`${API_BASE}/guide/profile`, { headers: authHeaders() });
+    const data = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.location.replace('login.html');
+      return;
+    }
+    if (!response.ok) throw new Error(data.error || 'Could not load your profile');
+
+    populateProfile(data);
+  } catch (error) {
+    showToast('Profile could not be loaded', error.message === 'Failed to fetch'
+      ? 'Backend server is not running on port 5001.'
+      : error.message, true);
+  } finally {
+    document.documentElement.classList.remove('auth-check-pending');
+  }
+}
+
+function populateProfile(profile) {
+  setValue('guideName', profile.name || authState.user.name || '');
+  setValue('guideLocation', profile.location || '');
+  setValue('guideLanguages', Array.isArray(profile.languages) ? profile.languages.join(', ') : (profile.languages || ''));
+  setValue('guideBio', profile.bio || '');
+  setValue('hourlyRateInput', Number(profile.hourlyRate) || 0);
+
+  specialtiesList = Array.isArray(profile.specialties) ? profile.specialties : [];
+  currentAvatarUrl = profile.avatarUrl || '';
+  isPublic = profile.isPublic !== false;
+
+  document.getElementById('toursDoneText').textContent = Number(profile.toursDone) || 0;
+  document.getElementById('avgRatingText').textContent = (Number(profile.avgRating) || 0).toFixed(1);
+  document.getElementById('repeatClientText').textContent = `${Number(profile.repeatClientRate) || 0}%`;
+  document.getElementById('verifiedGuideBadge').style.display = profile.isVerifiedGuide ? 'inline-flex' : 'none';
+  document.getElementById('topRatedBadge').style.display = profile.isTopRated ? 'inline-flex' : 'none';
+
+  document.querySelectorAll('.day-pill').forEach(button => {
+    setDayPillState(button, (profile.availableDays || []).includes(button.dataset.day));
+  });
+
+  setSelectValue('startTimeSelect', profile.startTime || '10:00 A.M');
+  setSelectValue('endTimeSelect', profile.endTime || '06:00 P.M');
+  updateVisibilityButton();
+  updateAvatarImage(currentAvatarUrl, profile.name || authState.user.name);
+  renderSpecialties();
+  calculateFee();
+}
+
+function setValue(id, value) {
+  const element = document.getElementById(id);
+  if (element) element.value = value;
+}
+
+function setSelectValue(id, value) {
+  const select = document.getElementById(id);
+  if (!select) return;
+  if (![...select.options].some(option => option.value === value)) {
+    select.add(new Option(value, value));
+  }
+  select.value = value;
+}
+
 function calculateFee() {
   const rateInput = document.getElementById('hourlyRateInput');
   const netEarningsText = document.getElementById('netEarningsText');
   if (!rateInput || !netEarningsText) return;
 
-  const rate = parseFloat(rateInput.value) || 0;
-  const fee = Math.round((rate * 12) / 100);
-  const net = rate - fee;
-  netEarningsText.innerText = '৳' + net;
+  const rate = Math.max(0, parseFloat(rateInput.value) || 0);
+  const net = rate - ((rate * 12) / 100);
+  netEarningsText.innerText = `৳${Number.isInteger(net) ? net : net.toFixed(2)}`;
 }
 
-// 2. Render Specialties Tag Chips
 function renderSpecialties() {
   const container = document.getElementById('specialtiesContainer');
   if (!container) return;
+  container.replaceChildren();
 
-  container.innerHTML = specialtiesList.map((tag, idx) => `
-    <span style="display:inline-flex; align-items:center; gap:4px; padding:4px 12px; background:#ecfdf5; color:#065f46; font-size:11px; font-weight:600; border-radius:9999px; border:1px solid #a7f3d0;">
-      <span>${tag}</span>
-      <button type="button" onclick="removeSpecialty(${idx})" style="color:#059669; font-weight:bold; cursor:pointer; background:none; border:none; font-size:14px; line-height:1; margin-left:2px;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#059669'">
-        &times;
-      </button>
-    </span>
-  `).join('');
+  specialtiesList.forEach((tag, index) => {
+    const chip = document.createElement('span');
+    chip.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 12px;background:#ecfdf5;color:#065f46;font-size:11px;font-weight:600;border-radius:9999px;border:1px solid #a7f3d0;';
+
+    const text = document.createElement('span');
+    text.textContent = tag;
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.setAttribute('aria-label', `Remove ${tag}`);
+    removeButton.textContent = '×';
+    removeButton.style.cssText = 'color:#059669;font-weight:bold;cursor:pointer;background:none;border:none;font-size:14px;line-height:1;margin-left:2px;';
+    removeButton.addEventListener('click', () => removeSpecialty(index));
+
+    chip.append(text, removeButton);
+    container.appendChild(chip);
+  });
 }
 
-// Add new specialty tag
 function addSpecialty() {
   const input = document.getElementById('newSpecialtyInput');
   if (!input) return;
 
   const tag = input.value.trim();
-  if (tag && !specialtiesList.includes(tag)) {
+  if (tag && !specialtiesList.some(item => item.toLowerCase() === tag.toLowerCase())) {
     specialtiesList.push(tag);
     renderSpecialties();
     input.value = '';
@@ -61,115 +153,135 @@ function addSpecialty() {
   }
 }
 
-// Allow Enter key to add specialty
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('newSpecialtyInput');
-  if (input) {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); addSpecialty(); }
-    });
-  }
-});
-
-// Remove specialty tag
 function removeSpecialty(index) {
   specialtiesList.splice(index, 1);
   renderSpecialties();
 }
 
-// 3. DP / Profile Picture Upload — click on circle, shows image inside same circle
 function handleDpChange(event) {
-  const file = event.target.files ? event.target.files[0] : null;
+  const file = event.target.files?.[0];
   if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Invalid profile photo', 'Please choose an image file.', true);
+    return;
+  }
+  if (file.size > 1_500_000) {
+    showToast('Profile photo is too large', 'Please choose an image smaller than 1.5 MB.', true);
+    return;
+  }
 
   const reader = new FileReader();
-  reader.onload = function(e) {
-    updateAvatarImage(e.target.result);
-  };
+  reader.onload = event => updateAvatarImage(event.target.result, document.getElementById('guideName').value);
   reader.readAsDataURL(file);
 }
 
-function updateAvatarImage(src) {
-  currentAvatarUrl = src;
+function updateAvatarImage(src, name = '') {
+  currentAvatarUrl = src || '';
+  const initials = String(name || 'Guide')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0].toUpperCase())
+    .join('') || 'G';
 
-  // Update ALL elements with class guide-dp-img (both navbar avatar and profile circle)
-  const avatarElements = document.querySelectorAll('.guide-dp-img');
-  avatarElements.forEach(el => {
-    // Clear existing content (removes the "MR" text)
-    el.innerHTML = '';
-    // Set background image on the circle div itself so it stays perfectly round
-    el.style.backgroundImage = `url('${src}')`;
-    el.style.backgroundSize = 'cover';
-    el.style.backgroundPosition = 'center';
+  document.querySelectorAll('.guide-dp-img').forEach(element => {
+    if (currentAvatarUrl) {
+      element.replaceChildren();
+      element.style.backgroundImage = `url("${currentAvatarUrl.replaceAll('"', '%22')}")`;
+      element.style.backgroundSize = 'cover';
+      element.style.backgroundPosition = 'center';
+    } else {
+      element.style.backgroundImage = '';
+      const span = document.createElement('span');
+      span.textContent = initials;
+      element.replaceChildren(span);
+    }
   });
 }
 
-// 4. Day Pill Selector (Friday - Thursday)
-function toggleDayPill(btn) {
-  const isSelected = btn.classList.contains('bg-emerald-50');
-  if (isSelected) {
-    // Deselect
-    btn.style.backgroundColor = '#f8fafc';
-    btn.style.color = '#94a3b8';
-    btn.style.border = '1px solid #e2e8f0';
-    btn.classList.remove('bg-emerald-50', 'text-emerald-800', 'border-emerald-400');
-  } else {
-    // Select
-    btn.style.backgroundColor = '#ecfdf5';
-    btn.style.color = '#065f46';
-    btn.style.border = '1px solid #34d399';
-    btn.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-400');
-  }
+function setDayPillState(button, selected) {
+  button.style.backgroundColor = selected ? '#ecfdf5' : '#f8fafc';
+  button.style.color = selected ? '#065f46' : '#94a3b8';
+  button.style.border = selected ? '1px solid #34d399' : '1px solid #e2e8f0';
+  button.classList.toggle('bg-emerald-50', selected);
+  button.classList.toggle('text-emerald-800', selected);
+  button.classList.toggle('border-emerald-400', selected);
+  button.classList.toggle('ring-1', selected);
+  button.classList.toggle('ring-emerald-300', selected);
 }
 
-// 5. Profile Visibility Toggle (Public / Hidden)
+function toggleDayPill(button) {
+  setDayPillState(button, !button.classList.contains('bg-emerald-50'));
+}
+
 function toggleVisibility() {
   isPublic = !isPublic;
-  const btn = document.getElementById('visibilityToggle');
-  if (!btn) return;
+  updateVisibilityButton();
+}
 
-  if (isPublic) {
-    btn.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300';
-    btn.innerText = '● Public';
-  } else {
-    btn.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-300';
-    btn.innerText = '○ Hidden';
+function updateVisibilityButton() {
+  const button = document.getElementById('visibilityToggle');
+  if (!button) return;
+  button.className = isPublic
+    ? 'px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-300'
+    : 'px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-300';
+  button.innerText = isPublic ? '● Public' : '○ Hidden';
+}
+
+async function saveProfile() {
+  const payload = {
+    name: document.getElementById('guideName').value.trim(),
+    location: document.getElementById('guideLocation').value.trim(),
+    languages: document.getElementById('guideLanguages').value.split(',').map(value => value.trim()).filter(Boolean),
+    bio: document.getElementById('guideBio').value.trim(),
+    hourlyRate: Number(document.getElementById('hourlyRateInput').value),
+    specialties: specialtiesList,
+    avatarUrl: currentAvatarUrl,
+    isPublic,
+    availableDays: [...document.querySelectorAll('.day-pill.bg-emerald-50')].map(button => button.dataset.day),
+    startTime: document.getElementById('startTimeSelect').value,
+    endTime: document.getElementById('endTimeSelect').value
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/guide/profile`, {
+      method: 'PUT',
+      headers: authHeaders(true),
+      body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+
+    if (response.status === 401 || response.status === 403) {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.location.replace('login.html');
+      return;
+    }
+    if (!response.ok) throw new Error(data.error || 'Could not save your profile');
+
+    authState.user.name = data.profile.name;
+    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authState));
+    populateProfile(data.profile);
+    showToast('Profile updated successfully!', 'Changes saved to ExploreBD.');
+  } catch (error) {
+    showToast('Profile was not saved', error.message === 'Failed to fetch'
+      ? 'Backend server is not running on port 5001.'
+      : error.message, true);
   }
 }
 
-// 6. Save Profile API Function
-async function saveProfile() {
+function showToast(title, message, isError = false) {
   const toast = document.getElementById('toastAlert');
-  if (toast) {
-    toast.classList.remove('hidden');
-    toast.style.display = 'flex';
-  }
+  if (!toast) return;
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMessage').textContent = message;
+  toast.className = isError
+    ? 'mb-6 p-4 bg-red-50 border-2 border-red-400 rounded-2xl text-red-900 flex items-center space-x-3 shadow-md'
+    : 'mb-6 p-4 bg-emerald-50 border-2 border-emerald-500 rounded-2xl text-emerald-900 flex items-center space-x-3 shadow-md';
+  window.clearTimeout(showToast.timeoutId);
+  showToast.timeoutId = window.setTimeout(() => toast.classList.add('hidden'), 4000);
+}
 
-  try {
-    const payload = {
-      name: document.getElementById('guideName')?.value || 'Md. Muntasir Rahman',
-      location: document.getElementById('guideLocation')?.value || 'Dhaka, Bangladesh',
-      languages: document.getElementById('guideLanguages')?.value || 'Bengali, English, Hindi',
-      bio: document.getElementById('guideBio')?.value || '',
-      hourlyRate: parseFloat(document.getElementById('hourlyRateInput')?.value || 650),
-      specialties: specialtiesList,
-      avatarUrl: currentAvatarUrl,
-      isPublic: isPublic
-    };
-
-    await fetch('http://localhost:5000/api/guide/profile', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch (err) {
-    console.log('Saved profile state locally (no DB connection)');
-  }
-
-  setTimeout(() => {
-    if (toast) {
-      toast.classList.add('hidden');
-      toast.style.display = 'none';
-    }
-  }, 3000);
+function logout() {
+  localStorage.removeItem(AUTH_STORAGE_KEY);
+  window.location.replace('login.html');
 }

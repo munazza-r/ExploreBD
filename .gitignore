@@ -14,6 +14,8 @@ yarn.lock
 .env.*.local
 backend/.env
 frontend/.env
+backend/data/local-db.json
+backend/data/local-db.json.tmp
 
 # ─── Build / Cache ─────────────────────────────────
 dist/
