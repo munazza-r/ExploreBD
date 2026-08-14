@@ -55,12 +55,12 @@ function serializeProfile(profile, user) {
 
 router.get('/profile', async (req, res) => {
   try {
-    const memoryProfile = guideProfilesByUserId.get(req.user.id);
-    if (memoryProfile) return res.json(serializeProfile(memoryProfile, req.user));
-
-    if (mongoose.connection.readyState === 1 && !usersById.has(req.user.id)) {
+    if (mongoose.connection.readyState === 1) {
       const profile = await GuideProfile.findOne({ userId: req.user.id });
       if (profile) return res.json(serializeProfile(profile, req.user));
+    } else {
+      const memoryProfile = guideProfilesByUserId.get(req.user.id);
+      if (memoryProfile) return res.json(serializeProfile(memoryProfile, req.user));
     }
 
     return res.json(defaultProfile(req.user));
@@ -89,8 +89,8 @@ router.put('/profile', async (req, res) => {
     };
 
     let profile;
-    const memoryUser = usersById.get(req.user.id);
-    if (memoryUser || mongoose.connection.readyState !== 1) {
+    if (mongoose.connection.readyState !== 1) {
+      const memoryUser = usersById.get(req.user.id);
       if (memoryUser) {
         memoryUser.name = profileData.name;
         saveUser(memoryUser);

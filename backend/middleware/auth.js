@@ -20,10 +20,8 @@ function publicUser(user) {
 }
 
 async function findUserById(userId) {
-  const memoryUser = usersById.get(userId);
-  if (memoryUser) return memoryUser;
-  if (mongoose.connection.readyState !== 1) return null;
-  return User.findById(userId);
+  if (mongoose.connection.readyState === 1) return User.findById(userId);
+  return usersById.get(userId) || null;
 }
 
 async function requireAuth(req, res, next) {

@@ -16,10 +16,8 @@ function normalizeEmail(email) {
 }
 
 async function findUserByEmail(email) {
-  const memoryUser = usersByEmail.get(email);
-  if (memoryUser) return memoryUser;
-  if (mongoose.connection.readyState !== 1) return null;
-  return User.findOne({ email });
+  if (mongoose.connection.readyState === 1) return User.findOne({ email });
+  return usersByEmail.get(email) || null;
 }
 
 router.post('/register', async (req, res) => {
