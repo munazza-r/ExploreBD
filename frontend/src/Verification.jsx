@@ -1,7 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './Verification.css';
 
 const Verification = () => {
+  const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
+  const [message, setMessage] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    const formData = new FormData(e.target);
+
+    try {
+      const res = await fetch("http://localhost:5052/api/verification/submit", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus("success");
+        setMessage("Documents submitted successfully! An admin will review them soon.");
+        e.target.reset();
+      } else {
+        setStatus("error");
+        setMessage(data.error || "Something went wrong. Please try again.");
+      }
+    } catch (err) {
+      setStatus("error");
+      setMessage("Could not reach the server. Is the backend running?");
+    }
+  };
+
   return (
     <>
       <nav className="navbar">
@@ -17,8 +47,11 @@ const Verification = () => {
       <div className="main-content">
         <div className="verification-card">
           <h2>Guide Document Verification</h2>
-          
-          <form action="http://localhost:5000/api/verification/upload" method="POST" encType="multipart/form-data">
+
+          {status === "success" && <p style={{ color: "#238b56", fontWeight: 600 }}>{message}</p>}
+          {status === "error" && <p style={{ color: "#dc2626", fontWeight: 600 }}>{message}</p>}
+
+          <form onSubmit={handleSubmit} encType="multipart/form-data">
             <div className="form-group">
               <label htmlFor="universityName">University Name *</label>
               <input type="text" id="universityName" name="universityName" required placeholder="e.g. BRAC University" />
@@ -44,7 +77,9 @@ const Verification = () => {
               <input type="file" id="nidOrPassport" name="nidOrPassport" accept="image/*" required />
             </div>
 
-            <button type="submit" className="submit-btn">Submit Verification</button>
+            <button type="submit" className="submit-btn" disabled={status === "loading"}>
+              {status === "loading" ? "Submitting..." : "Submit Verification"}
+            </button>
           </form>
         </div>
       </div>

@@ -12,23 +12,10 @@ const submitVerification = async (req, res) => {
     const studentIdCardUrl = req.files['studentIdCard'][0].path;
     const nidOrPassportUrl = req.files['nidOrPassport'][0].path;
 
-    // TEMPORARY: Create a dummy user to link the verification to (until Auth is built)
-    let user = await prisma.user.findFirst();
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          name: "Dummy Guide",
-          email: "guide@explorebd.com",
-          password: "hashedpassword123",
-          role: "GUIDE"
-        }
-      });
-    }
 
     // Save the verification data to MongoDB using Prisma
     const verificationRecord = await prisma.guideVerification.create({
       data: {
-        userId: user.id,
         universityName: universityName,
         studentIdNumber: studentIdNumber,
         studentIdCardUrl: studentIdCardUrl,
