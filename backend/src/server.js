@@ -7,6 +7,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/images', express.static('images'));
 
 // Feature 1: Location & Language-Based Smart Guide Matching
 app.use("/api/guides", guideRoutes);
