@@ -43,3 +43,4 @@ model GuideVerification {
   submittedAt         DateTime           @default(now())
   reviewedAt          DateTime?
 }
+
