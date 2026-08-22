@@ -6,7 +6,7 @@ const path = require('path');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5051;
+const PORT = process.env.PORT || 5070;
 
 // Middlewares
 app.use(cors());
