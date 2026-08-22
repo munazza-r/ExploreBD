@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import api from "./api";
+import { Compass } from "lucide-react";
 
 const emptyPlace = { place: "", day: "1" };
 
@@ -119,7 +120,10 @@ export default function App() {
       {/* Sidebar */}
       <aside className="w-56 bg-green-600 text-white flex flex-col justify-between">
         <div>
-          <div className="px-6 py-6 text-lg font-semibold border-b border-green-500">
+          <div className="px-6 py-6 text-lg font-semibold border-b border-green-500 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-green-800 to-green-600 flex items-center justify-center">
+              <Compass className="w-5 h-5 text-green-200" />
+            </div>
             ExploreBD
           </div>
           <nav className="mt-4 flex flex-col text-sm">
