@@ -12,7 +12,7 @@ const Verification = () => {
     const formData = new FormData(e.target);
 
     try {
-      const res = await fetch("http://localhost:5050/api/verification/submit", {
+      const res = await fetch("http://localhost:5051/api/verification/submit", {
         method: "POST",
         body: formData,
       });
