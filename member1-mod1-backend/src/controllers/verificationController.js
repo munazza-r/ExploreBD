@@ -1,0 +1,38 @@
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
+const submitVerification = async (req, res) => {
+  try {
+    const { universityName, studentIdNumber, nidOrPassportNumber } = req.body;
+
+    if (!req.files || !req.files['studentIdCard'] || !req.files['nidOrPassport']) {
+      return res.status(400).json({ error: "Both Student ID and NID/Passport images are required." });
+    }
+
+    const studentIdCardUrl = req.files['studentIdCard'][0].path;
+    const nidOrPassportUrl = req.files['nidOrPassport'][0].path;
+
+
+    // Save the verification data to MongoDB using Prisma
+    const verificationRecord = await prisma.guideVerification.create({
+      data: {
+        universityName: universityName,
+        studentIdNumber: studentIdNumber,
+        studentIdCardUrl: studentIdCardUrl,
+        nidOrPassportNumber: nidOrPassportNumber,
+        nidOrPassportUrl: nidOrPassportUrl
+      }
+    });
+
+    res.status(201).json({
+      message: "Documents securely uploaded and saved to the database!",
+      data: verificationRecord
+    });
+
+  } catch (error) {
+    console.error("Database Error:", error);
+    res.status(500).json({ error: "Failed to save verification documents." });
+  }
+};
+
+module.exports = { submitVerification };
