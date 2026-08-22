@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Verification.css';
+import { Compass } from "lucide-react";
 
 const Verification = () => {
   const [status, setStatus] = useState(null); // null | "loading" | "success" | "error"
@@ -37,7 +38,7 @@ const Verification = () => {
       <nav className="navbar">
       <div className="nav-brand" style={{display:"flex",alignItems:"center",gap:"10px"}}>
           <div style={{width:40,height:40,borderRadius:11,background:"linear-gradient(135deg,#15803d,#16a34a)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <i data-lucide="compass" style={{width:22,height:22,color:"#bbf7d0"}}></i>
+            <Compass size={22} color="#bbf7d0" />
            </div>
           Explore<span style={{color:"#16a34a"}}>BD</span>
         </div>
