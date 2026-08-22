@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { fetchAllGuides, searchGuides } from "../api/guideApi";
 import GuideCard from "../components/GuideCard";
 import FilterSidebar from "../components/FilterSidebar";
+import { Compass, Bell } from "lucide-react";
 
 const DEFAULT_FILTERS = {
   location: "",
@@ -63,6 +64,32 @@ export default function ExploreGuides() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
+      <nav className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-green-700 to-green-500 flex items-center justify-center">
+            <Compass size={20} className="text-green-100" />
+          </div>
+          <span className="text-lg font-bold text-gray-900">
+            Explore<span className="text-green-600">BD</span>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
+          <span className="cursor-pointer hover:text-gray-900">Dashboard</span>
+          <span className="text-green-700 border-b-2 border-green-700 pb-1 cursor-pointer">Explore Guides</span>
+          <span className="cursor-pointer hover:text-gray-900">Bookings</span>
+          <span className="cursor-pointer hover:text-gray-900">Messages</span>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Bell size={20} className="text-gray-500" />
+          <div className="w-9 h-9 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-semibold">
+            MR
+          </div>
+        </div>
+      </nav>
+      
       {/* Hero / search banner */}
       <div className="bg-gradient-to-r from-green-700 to-green-500 px-8 py-10 text-white">
         <h1 className="text-3xl font-bold mb-1">Find your perfect local guide</h1>
