@@ -1,37 +1,52 @@
-import { Compass, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
+
+const links = ["Dashboard", "My profile", "Bookings", "Messages"];
 
 export default function Navbar({ active }) {
-  const links = ["Dashboard", "Explore Guides", "Bookings", "Messages"];
   return (
-    <nav className="bg-white border-b border-gray-200 px-8 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-green-700 to-green-500 flex items-center justify-center">
-          <Compass size={20} className="text-green-100" />
-        </div>
-        <span className="text-lg font-bold text-gray-900">
-          Explore<span className="text-green-600">BD</span>
-        </span>
-      </div>
-
-      <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-        {links.map((link) => (
-          <span
-            key={link}
-            className={
-              link === active
-                ? "text-green-700 border-b-2 border-green-700 pb-1 cursor-pointer"
-                : "cursor-pointer hover:text-gray-900"
-            }
-          >
-            {link}
+    <nav className="h-16 border-t-[3px] border-t-[#343434] border-b border-b-[#e5e9ed] bg-white px-4 sm:px-7">
+      <div className="mx-auto grid h-full max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center">
+        <a href="#" className="flex w-fit items-center gap-4" aria-label="ExploreBD home">
+          <span className="flex h-7 w-7 items-center justify-center rounded-[7px] bg-[#108a70] text-sm font-semibold text-white">
+            E
           </span>
-        ))}
-      </div>
+          <span className="text-[17px] font-semibold tracking-[-0.02em] text-[#182033]">ExploreBD</span>
+        </a>
 
-      <div className="flex items-center gap-4">
-        <Bell size={20} className="text-gray-500" />
-        <div className="w-9 h-9 rounded-full bg-green-700 text-white flex items-center justify-center text-sm font-semibold">
-          MR
+        <div className="hidden items-stretch gap-5 text-sm text-[#4b5565] md:flex">
+          {links.map((link) => {
+            const isActive = link === active;
+
+            return (
+              <a
+                key={link}
+                href="#"
+                className={`relative flex h-10 items-center rounded-lg px-3 transition-colors hover:text-[#111827] ${
+                  isActive ? "bg-[#eef8f5] text-[#455260]" : ""
+                }`}
+              >
+                {link}
+                {isActive && <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-[#69d9c0]" />}
+              </a>
+            );
+          })}
+        </div>
+
+        <div className="ml-auto flex items-center gap-5">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="rounded-full p-1.5 text-[#b38a00] transition-colors hover:bg-amber-50"
+          >
+            <Bell size={17} fill="currentColor" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
+            aria-label="Open profile"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0e806a] text-[11px] font-semibold text-white"
+          >
+            MR
+          </button>
         </div>
       </div>
     </nav>

@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5063/api/messages";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5073/api/messages";
 
 export async function sendMessage(data) {
   const res = await fetch(BASE_URL, {
