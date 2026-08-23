@@ -1,0 +1,19 @@
+// Module 2 - Feature 3: Secure In-App Chat & Communication Portal
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Message {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String
+  senderName     String
+  senderRole     String   // "TOURIST" | "GUIDE"
+  content        String
+  wasFiltered    Boolean  @default(false) // true if a phone number was blocked from this message
+  createdAt      DateTime @default(now())
+}
