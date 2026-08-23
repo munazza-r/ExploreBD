@@ -1,0 +1,24 @@
+// Module 2 - Feature 2: Google Maps-Based Meeting Point & Route Visualization System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Meeting {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  touristName     String
+  guideName       String
+  tourDetails     String
+  touristLocation String
+  guideLocation   String
+  meetingPoint    String?
+  distance        String?
+  duration        String?
+  traffic         String?
+  status          String   @default("Pending Selection")
+  createdAt       DateTime @default(now())
+}
