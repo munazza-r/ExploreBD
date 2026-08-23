@@ -3,9 +3,41 @@ const prisma = require("../db");
 // A small mock dataset of guides used for the recommendation logic.
 // In a full merge, this would instead query the real Guide collection from Module 1.
 const MOCK_GUIDES = [
-  { name: "Abrar Rahman", university: "Sylhet Agricultural University", rating: 4.9, reviews: 52, languages: ["Bengali", "English"], tags: ["Nature tours"], pricePerDay: 1200 },
-  { name: "Arisha Tabassum", university: "Shahjalal University", rating: 4.8, reviews: 37, languages: ["Bengali", "Hindi"], tags: ["Photography"], pricePerDay: 1000 },
-  { name: "Farhana Islam", university: "Cox's Bazar", rating: 4.5, reviews: 96, languages: ["Bengali", "English"], tags: ["Food", "Village"], pricePerDay: 800 },
+  { name: "Abrar Rahman", university: "Sylhet Agricultural University", rating: 4.9, reviews: 52, languages: ["Bengali", "English"], tags: ["Nature tours"], pricePerDay: 1200, location: "Sylhet" },
+  { name: "Arisha Tabassum", university: "Shahjalal University", rating: 4.8, reviews: 37, languages: ["Bengali", "Hindi"], tags: ["Photography"], pricePerDay: 1000, location: "Sylhet" },
+  { name: "Farhana Islam", university: "Cox's Bazar", rating: 4.5, reviews: 96, languages: ["Bengali", "English"], tags: ["Food", "Village"], pricePerDay: 800, location: "Cox's Bazar" },
+
+  // Chittagong
+  { name: "Rafiul Islam", university: "Chittagong University", rating: 4.7, reviews: 44, languages: ["Bengali", "English"], tags: ["Adventure", "Food"], pricePerDay: 900, location: "Chittagong" },
+  { name: "Nusrat Jahan", university: "University of Chittagong", rating: 4.6, reviews: 58, languages: ["Bengali"], tags: ["Food", "History"], pricePerDay: 700, location: "Chittagong" },
+
+  // Rangamati
+  { name: "Proshanto Chakma", university: "Rangamati Science and Technology University", rating: 4.8, reviews: 29, languages: ["Bengali", "English"], tags: ["Nature", "Village"], pricePerDay: 850, location: "Rangamati" },
+  { name: "Mitu Tanchangya", university: "Rangamati Government College", rating: 4.6, reviews: 21, languages: ["Bengali"], tags: ["Village", "Adventure"], pricePerDay: 650, location: "Rangamati" },
+
+  // Bandarban
+  { name: "Shahriar Kabir", university: "Chittagong University of Engineering & Technology", rating: 4.9, reviews: 33, languages: ["Bengali", "English"], tags: ["Adventure", "Nature"], pricePerDay: 1100, location: "Bandarban" },
+  { name: "Ushai Marma", university: "Bandarban Government College", rating: 4.7, reviews: 19, languages: ["Bengali", "Marma"], tags: ["Nature", "Village"], pricePerDay: 750, location: "Bandarban" },
+
+  // Rajshahi
+  { name: "Tanvir Ahmed", university: "University of Rajshahi", rating: 4.8, reviews: 41, languages: ["Bengali", "English"], tags: ["History", "Photography"], pricePerDay: 950, location: "Rajshahi" },
+  { name: "Shirin Akter", university: "Rajshahi College", rating: 4.5, reviews: 27, languages: ["Bengali"], tags: ["Village", "History"], pricePerDay: 700, location: "Rajshahi" },
+
+  // Paharpur
+  { name: "Imran Hossain", university: "Varendra University", rating: 4.7, reviews: 24, languages: ["Bengali", "English"], tags: ["History"], pricePerDay: 800, location: "Paharpur" },
+  { name: "Ayesha Siddika", university: "Naogaon Government College", rating: 4.4, reviews: 16, languages: ["Bengali"], tags: ["History", "Photography"], pricePerDay: 600, location: "Paharpur" },
+
+  // Sonargaon
+  { name: "Rakibul Hasan", university: "University of Dhaka", rating: 4.8, reviews: 48, languages: ["Bengali", "English"], tags: ["History", "Photography"], pricePerDay: 1000, location: "Sonargaon" },
+  { name: "Nazia Rahman", university: "Narayanganj Government College", rating: 4.6, reviews: 22, languages: ["Bengali"], tags: ["History"], pricePerDay: 700, location: "Sonargaon" },
+
+  // Dhaka
+  { name: "Sabbir Ahmed", university: "University of Dhaka", rating: 4.9, reviews: 87, languages: ["Bengali", "English", "Hindi"], tags: ["History", "Food"], pricePerDay: 1300, location: "Dhaka" },
+  { name: "Rumana Karim", university: "Dhaka College", rating: 4.6, reviews: 39, languages: ["Bengali"], tags: ["Food", "Photography"], pricePerDay: 800, location: "Dhaka" },
+
+  // Kuakata
+  { name: "Jahidul Islam", university: "Patuakhali Science and Technology University", rating: 4.7, reviews: 25, languages: ["Bengali", "English"], tags: ["Nature", "Adventure"], pricePerDay: 900, location: "Kuakata" },
+  { name: "Moushumi Begum", university: "Patuakhali Government College", rating: 4.5, reviews: 18, languages: ["Bengali"], tags: ["Village", "Nature"], pricePerDay: 650, location: "Kuakata" },
 ];
 
 // A small mock dataset of attractions per destination, used when no Gemini API key is set.
@@ -20,6 +52,48 @@ const MOCK_ATTRACTIONS = {
     { time: "11:00 AM", name: "Himchari National Park", desc: "Waterfalls and hilltop viewpoints overlooking the Bay of Bengal." },
     { time: "4:00 PM", name: "Inani Beach", desc: "Quieter stretch of coastline with coral rock formations." },
   ],
+
+  Chittagong: [
+    { time: "5:30 PM", name: "Patenga Beach", desc: "Watch the sunset where the Karnaphuli River meets the Bay of Bengal." },
+    { time: "10:00 AM", name: "Foy's Lake", desc: "Hilltop lake with an amusement park, popular for boating and views." },
+    { time: "2:00 PM", name: "Ethnological Museum", desc: "Explore the culture and heritage of the Chittagong Hill Tracts' tribal communities." },
+  ],
+  Rangamati: [
+    { time: "9:00 AM", name: "Kaptai Lake Boat Ride", desc: "Glide across Bangladesh's largest man-made lake, surrounded by hills." },
+    { time: "1:00 PM", name: "Jhulonto Shetu (Hanging Bridge)", desc: "Iconic 335-foot suspension bridge over the lake, a symbol of Rangamati." },
+    { time: "4:00 PM", name: "Shuvolong Waterfall", desc: "One of the region's largest waterfalls, reachable by boat." },
+  ],
+  Bandarban: [
+    { time: "7:00 AM", name: "Nilgiri Hill", desc: "Sunrise above the clouds from one of Bangladesh's highest viewpoints." },
+    { time: "11:00 AM", name: "Buddha Dhatu Jadi (Golden Temple)", desc: "The largest Buddhist temple in Bangladesh, housing sacred relics." },
+    { time: "3:00 PM", name: "Chimbuk Hill", desc: "Panoramic hill-tract views and nearby indigenous villages." },
+  ],
+  Rajshahi: [
+    { time: "9:00 AM", name: "Bagha Mosque", desc: "16th-century terracotta mosque, a masterpiece of Sultanate-era architecture." },
+    { time: "12:00 PM", name: "Varendra Museum", desc: "Bangladesh's oldest museum, housing ancient sculptures and artifacts." },
+    { time: "3:30 PM", name: "Puthia Temple Complex", desc: "Largest cluster of historic Hindu temples in the Bengal region." },
+  ],
+  Paharpur: [
+    { time: "9:00 AM", name: "Somapura Mahavihara", desc: "UNESCO World Heritage 8th-century Buddhist monastery ruins, one of the largest south of the Himalayas." },
+    { time: "12:30 PM", name: "Paharpur Museum", desc: "Terracotta plaques and artifacts excavated from the site." },
+    { time: "3:00 PM", name: "Satyapir Bhita Ruins", desc: "Smaller nearby ruins tied to local folklore and legend." },
+  ],
+  Sonargaon: [
+    { time: "9:00 AM", name: "Panam City", desc: "Row of preserved 19th-century merchant mansions from the old capital of Bengal." },
+    { time: "12:00 PM", name: "Folk Art and Crafts Museum", desc: "Traditional Bengali art, crafts, and rural heritage exhibits." },
+    { time: "2:30 PM", name: "Goaldi Mosque", desc: "Early 16th-century mosque, one of the oldest in the region." },
+  ],
+  Dhaka: [
+    { time: "9:00 AM", name: "Lalbagh Fort", desc: "Unfinished 17th-century Mughal fort complex in the heart of Old Dhaka." },
+    { time: "12:00 PM", name: "Ahsan Manzil", desc: "The pink Nawab's palace, now a museum on the Buriganga riverbank." },
+    { time: "4:00 PM", name: "Sadarghat", desc: "Bustling river terminal on the Buriganga, alive with launches and river life." },
+  ],
+  Kuakata: [
+    { time: "6:00 AM", name: "Kuakata Sea Beach", desc: "The rare beach where both sunrise and sunset can be seen over the water." },
+    { time: "11:00 AM", name: "Rakhine Village", desc: "Visit local Rakhine communities and their distinct culture and weaving." },
+    { time: "3:00 PM", name: "Fatrar Char", desc: "Mangrove forest and char land, a quieter nature escape near the coast." },
+  ],
+
   default: [
     { time: "9:00 AM", name: "Local heritage site", desc: "Start the day exploring the area's most iconic landmark." },
     { time: "1:00 PM", name: "Local food tour", desc: "Sample authentic regional cuisine with your guide." },
@@ -37,8 +111,15 @@ function buildMockItinerary(destination, tripLength) {
   return days;
 }
 
-function recommendGuides(interests, budget) {
-  return MOCK_GUIDES
+function recommendGuides(interests, budget, destination) {
+  // Prefer guides based in the requested destination; fall back to the full pool
+  // if none match, so this stays additive and never breaks existing behavior.
+  const destinationGuides = destination
+    ? MOCK_GUIDES.filter((g) => g.location === destination)
+    : [];
+  const pool = destinationGuides.length > 0 ? destinationGuides : MOCK_GUIDES;
+
+  return pool
     .map((g) => {
       const overlap = g.tags.filter((t) => interests.includes(t)).length;
       const matchScore = Math.min(99, 60 + overlap * 15 + (g.pricePerDay <= budget ? 10 : 0));
@@ -89,7 +170,7 @@ async function generateItinerary(req, res) {
       itinerary = buildMockItinerary(destination, tripLength);
     }
 
-    const guides = recommendGuides(interests, budget);
+    const guides = recommendGuides(interests, budget, destination);
 
     const saved = await prisma.itineraryRequest.create({
       data: { destination, tripLength, budget, interests, itinerary, guides },
