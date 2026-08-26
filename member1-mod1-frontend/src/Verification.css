@@ -2,10 +2,10 @@
   --primary-green: #15803d; 
   --primary-green-hover: #166534;
   --bg-light: #f4f6f8;
-  --card-white: #ffffff;
+  --card-white: #bfe9d0;
   --text-dark: #111827;
   --text-muted: #6b7280;
-  --border-light: #e5e7eb;
+  --border-light: #e0e6f1;
 }
 
 body {
@@ -16,8 +16,9 @@ body {
 }
 
 .navbar {
-  background-color: var(--card-white);
-  border-bottom: 1px solid var(--border-light);
+  background-color: #065F46;
+  border-bottom: none;
+  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.3);
   padding: 0 40px;
   height: 70px;
   display: flex;
@@ -28,7 +29,8 @@ body {
 .nav-brand {
   font-size: 22px;
   font-weight: 700;
-  color: var(--primary-green);
+  color: #FFFFFF;
+  letter-spacing: 0.02em;
 }
 
 .nav-links {
@@ -37,31 +39,35 @@ body {
 }
 
 .nav-links span {
-  color: var(--text-muted);
+  color: #fbfffd;
   font-weight: 500;
   font-size: 14px;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.nav-links span:hover {
+  color: #34D399;
 }
 
 .nav-links span.active {
-  color: var(--primary-green);
-  border-bottom: 2px solid var(--primary-green);
+  color: #1fcf8e;
+  border-bottom: 2px solid #30d498;
   padding-bottom: 24px;
 }
 
 .avatar-circle {
   width: 35px; 
   height: 35px; 
-  background: var(--primary-green); 
+  background: #07a56b; 
   border-radius: 50%; 
-  color: white; 
+  color: #ffffff; 
   display: flex; 
   align-items: center; 
   justify-content: center; 
   font-weight: bold; 
   font-size: 12px;
 }
-
 .main-content {
   padding: 40px 20px;
   display: flex;
@@ -83,6 +89,7 @@ h2 {
   margin-bottom: 30px;
   border-bottom: 1px solid var(--border-light);
   padding-bottom: 15px;
+  color: #0B6623;
 }
 
 .form-group {
@@ -127,4 +134,37 @@ input:focus {
 
 .submit-btn:hover {
   background-color: var(--primary-green-hover);
+}
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-card {
+  background: rgb(248, 242, 242);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.popup-card h3 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.popup-card p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0 0 10px;
 }

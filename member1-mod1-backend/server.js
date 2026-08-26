@@ -14,8 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded document images statically
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+app.use('/attachments', express.static(path.join(__dirname, 'attachments')));
 // Verification Routes
 const verificationRoutes = require('./src/routes/verificationRoutes');
 app.use('/api/verification', verificationRoutes);
