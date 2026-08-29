@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  INITIATED
+  ESCROW_HELD
+  RELEASED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+}
+
+model Payment {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  bookingId         String
+  touristId         String
+  guideId           String
+
+  amount            Float
+  currency          String        @default("BDT")
+  method            PaymentMethod @default(BKASH)
+  status            PaymentStatus @default(INITIATED)
+
+  bkashPaymentID    String?       @unique
+  bkashTrxID        String?
+  merchantInvoiceNo String        @unique
+  payerReference    String?
+
+  platformCommission Float?
+  guideEarning        Float?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("payments")
+}
