@@ -1,73 +1,134 @@
 const { randomUUID } = require("crypto");
 const prisma = require("../config/db");
-const bkashService = require("../services/bkash.service");
-const nagadService = require("../services/nagad.service");
+const sslczService = require("../services/sslcommerz.service");
+
+const CALLBACK_BASE_URL = process.env.SSLCZ_CALLBACK_BASE_URL || "http://localhost:1667";
+const FRONTEND_URL = process.env.CLIENT_URL || "http://localhost:5173";
+
 async function initiatePayment(req, res) {
   try {
-    const { bookingId, touristId, guideId, amount, method } = req.body;
+    const { bookingId, touristId, guideId, amount } = req.body;
+
     if (!bookingId || !touristId || !guideId || !amount) {
       return res.status(400).json({ success: false, message: "bookingId, touristId, guideId and amount are required" });
     }
     if (Number(amount) <= 0) {
       return res.status(400).json({ success: false, message: "Amount must be greater than zero" });
     }
+    if (!/^\d{8}$/.test(bookingId)) {
+      return res.status(400).json({ success: false, message: "Booking ID must be exactly 8 digits." });
+    }
+    if (!/^\d{5}$/.test(touristId)) {
+      return res.status(400).json({ success: false, message: "Tourist ID must be exactly 5 digits." });
+    }
+    if (!/^\d{4}$/.test(guideId)) {
+      return res.status(400).json({ success: false, message: "Guide ID must be exactly 4 digits." });
+    }
 
-    const paymentMethod = method === "NAGAD" ? "NAGAD" : "BKASH";
     const merchantInvoiceNumber = `EXBD-${Date.now()}-${randomUUID().slice(0, 6)}`;
 
-    if (paymentMethod === "BKASH") {
-      const bkashResponse = await bkashService.createPayment({ amount, merchantInvoiceNumber, payerReference: touristId });
-      if (bkashResponse.statusCode !== "0000") {
-        return res.status(502).json({ success: false, message: "bKash rejected the payment creation request", details: bkashResponse });
-      }
-      const payment = await prisma.payment.create({
-        data: { bookingId, touristId, guideId, amount: Number(amount), method: "BKASH", status: "INITIATED",
-          bkashPaymentID: bkashResponse.paymentID, merchantInvoiceNo: merchantInvoiceNumber, payerReference: touristId },
-      });
-      return res.status(201).json({ success: true, paymentId: payment.id, bkashURL: bkashResponse.bkashURL, paymentID: bkashResponse.paymentID });
-    } else {
-      const nagadResponse = await nagadService.createPayment({ amount, merchantInvoiceNumber });
-      const payment = await prisma.payment.create({
-        data: { bookingId, touristId, guideId, amount: Number(amount), method: "NAGAD", status: "ESCROW_HELD",
-          bkashTrxID: nagadResponse.trxID, merchantInvoiceNo: merchantInvoiceNumber, payerReference: touristId },
-      });
-      return res.status(201).json({ success: true, paymentId: payment.id, message: "Nagad payment simulated and held in escrow", payment });
+    const sslResponse = await sslczService.initSession({
+      amount: Number(amount),
+      merchantInvoiceNumber,
+      touristId,
+      callbackBaseUrl: CALLBACK_BASE_URL,
+    });
+
+    if (!sslResponse || sslResponse.status !== "SUCCESS") {
+      return res.status(502).json({ success: false, message: "SSLCommerz rejected the payment session", details: sslResponse });
     }
+
+   const payment = await prisma.payment.create({
+   data: {
+    bookingId, touristId, guideId,
+    amount: Number(amount),
+    method: "SSLCOMMERZ",
+    status: "INITIATED",
+    bkashPaymentID: merchantInvoiceNumber,
+    merchantInvoiceNo: merchantInvoiceNumber,
+    payerReference: touristId,
+  },
+});
+
+    return res.status(201).json({
+      success: true,
+      paymentId: payment.id,
+      gatewayURL: sslResponse.GatewayPageURL,
+    });
   } catch (err) {
     console.error("initiatePayment error:", err?.response?.data || err.message);
     return res.status(500).json({ success: false, message: "Failed to initiate payment" });
   }
 }
 
-async function handleCallback(req, res) {
+// SSLCommerz redirects (POST) here after the customer completes payment
+async function handleSuccess(req, res) {
   try {
-    const { paymentID, status } = { ...req.query, ...req.body };
-    if (!paymentID) return res.status(400).json({ success: false, message: "paymentID is required" });
+    const { val_id, tran_id, bank_tran_id, card_type } = req.body;
 
-    const payment = await prisma.payment.findUnique({ where: { bkashPaymentID: paymentID } });
-    if (!payment) return res.status(404).json({ success: false, message: "Payment record not found" });
+    // CRITICAL: always validate with SSLCommerz's server — never trust the redirect body alone
+    const validation = await sslczService.validateTransaction(val_id);
 
-    if (status === "cancel" || status === "failure") {
-      const updated = await prisma.payment.update({ where: { id: payment.id }, data: { status: "CANCELLED" } });
-      return res.status(200).json({ success: false, message: `Payment ${status}`, payment: updated });
+    if (validation.status !== "VALID" && validation.status !== "VALIDATED") {
+      await prisma.payment.updateMany({
+        where: { merchantInvoiceNo: tran_id },
+        data: { status: "CANCELLED" },
+      });
+      return res.redirect(`${FRONTEND_URL}/payment/callback?status=fail`);
     }
 
-    const executeResult = await bkashService.executePayment(paymentID);
-
-    if (executeResult.transactionStatus !== "Completed") {
-      const updated = await prisma.payment.update({ where: { id: payment.id }, data: { status: "CANCELLED" } });
-      return res.status(200).json({ success: false, message: "Payment execution did not complete", details: executeResult, payment: updated });
-    }
-
-    const updated = await prisma.payment.update({
-      where: { id: payment.id },
-      data: { status: "ESCROW_HELD", bkashTrxID: executeResult.trxID },
+    const updated = await prisma.payment.updateMany({
+      where: { merchantInvoiceNo: tran_id },
+      data: {
+        status: "ESCROW_HELD",
+        sslczValId: val_id,
+        sslczBankTrxId: bank_tran_id,
+        sslczCardType: card_type,
+      },
     });
 
-    return res.status(200).json({ success: true, message: "Payment captured into escrow", payment: updated });
+    const payment = await prisma.payment.findFirst({ where: { merchantInvoiceNo: tran_id } });
+
+    return res.redirect(`${FRONTEND_URL}/payment/callback?status=success&paymentId=${payment.id}`);
   } catch (err) {
-    console.error("handleCallback error:", err?.response?.data || err.message);
-    return res.status(500).json({ success: false, message: "Failed to process payment callback" });
+    console.error("handleSuccess error:", err?.response?.data || err.message);
+    return res.redirect(`${FRONTEND_URL}/payment/callback?status=error`);
+  }
+}
+
+async function handleFail(req, res) {
+  const { tran_id } = req.body;
+  if (tran_id) {
+    await prisma.payment.updateMany({ where: { merchantInvoiceNo: tran_id }, data: { status: "CANCELLED" } });
+  }
+  return res.redirect(`${FRONTEND_URL}/payment/callback?status=fail`);
+}
+
+async function handleCancel(req, res) {
+  const { tran_id } = req.body;
+  if (tran_id) {
+    await prisma.payment.updateMany({ where: { merchantInvoiceNo: tran_id }, data: { status: "CANCELLED" } });
+  }
+  return res.redirect(`${FRONTEND_URL}/payment/callback?status=cancel`);
+}
+
+// IPN = Instant Payment Notification — SSLCommerz's server-to-server backup confirmation
+async function handleIpn(req, res) {
+  try {
+    const { val_id, tran_id } = req.body;
+    if (!val_id || !tran_id) return res.status(400).send("Missing val_id or tran_id");
+
+    const validation = await sslczService.validateTransaction(val_id);
+    if (validation.status === "VALID" || validation.status === "VALIDATED") {
+      await prisma.payment.updateMany({
+        where: { merchantInvoiceNo: tran_id },
+        data: { status: "ESCROW_HELD", sslczValId: val_id },
+      });
+    }
+    return res.status(200).send("IPN received");
+  } catch (err) {
+    console.error("handleIpn error:", err.message);
+    return res.status(500).send("IPN processing failed");
   }
 }
 
@@ -81,28 +142,38 @@ async function getPayment(req, res) {
   }
 }
 
-async function syncPaymentStatus(req, res) {
+async function getAllPayments(req, res) {
   try {
-    const payment = await prisma.payment.findUnique({ where: { id: req.params.id } });
-    if (!payment || !payment.bkashPaymentID) return res.status(404).json({ success: false, message: "Payment not found" });
-
-    const bkashStatus = await bkashService.queryPayment(payment.bkashPaymentID);
-    let status = payment.status;
-    if (bkashStatus.transactionStatus === "Completed") status = "ESCROW_HELD";
-    else if (["Cancelled", "Failed"].includes(bkashStatus.transactionStatus)) status = "CANCELLED";
-
-    const updated = await prisma.payment.update({
-      where: { id: payment.id },
-      data: { status, bkashTrxID: bkashStatus.trxID || payment.bkashTrxID },
-    });
-
-    return res.status(200).json({ success: true, payment: updated, bkashStatus });
+    const payments = await prisma.payment.findMany({ orderBy: { createdAt: 'desc' } });
+    return res.status(200).json({ success: true, payments });
   } catch (err) {
-    return res.status(500).json({ success: false, message: "Failed to sync payment status" });
+    return res.status(500).json({ success: false, message: "Failed to fetch payments" });
   }
 }
 
-module.exports = { initiatePayment, handleCallback, getPayment, syncPaymentStatus, releasePayment, refundPayment };
+async function markTourCompleted(req, res) {
+  try {
+    const payment = await prisma.payment.findUnique({ where: { id: req.params.id } });
+    if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
+    if (payment.status !== "ESCROW_HELD") {
+      return res.status(400).json({ success: false, message: `Cannot mark tour complete for a payment with status ${payment.status}` });
+    }
+    if (payment.tourCompleted) {
+      return res.status(400).json({ success: false, message: "Tour is already marked as completed" });
+    }
+
+    const updated = await prisma.payment.update({
+      where: { id: payment.id },
+      data: { tourCompleted: true, tourCompletedAt: new Date() },
+    });
+
+    return res.status(200).json({ success: true, message: "Tour marked as completed. Funds can now be released.", payment: updated });
+  } catch (err) {
+    console.error("markTourCompleted error:", err.message);
+    return res.status(500).json({ success: false, message: "Failed to mark tour as completed" });
+  }
+}
+
 async function releasePayment(req, res) {
   try {
     const payment = await prisma.payment.findUnique({ where: { id: req.params.id } });
@@ -110,8 +181,11 @@ async function releasePayment(req, res) {
     if (payment.status !== "ESCROW_HELD") {
       return res.status(400).json({ success: false, message: `Cannot release a payment with status ${payment.status}` });
     }
+    if (!payment.tourCompleted) {
+      return res.status(400).json({ success: false, message: "Cannot release funds until the tour is marked as completed." });
+    }
 
-    const commissionRate = 0.10; // 10% platform commission — adjust with your team's actual rate
+    const commissionRate = 0.10;
     const platformCommission = Number((payment.amount * commissionRate).toFixed(2));
     const guideEarning = Number((payment.amount - platformCommission).toFixed(2));
 
@@ -135,19 +209,11 @@ async function refundPayment(req, res) {
       return res.status(400).json({ success: false, message: `Cannot refund a payment with status ${payment.status}` });
     }
 
-    if (payment.method === "BKASH" && payment.bkashPaymentID && payment.bkashTrxID) {
-      await bkashService.refundTransaction({
-        paymentID: payment.bkashPaymentID,
-        trxID: payment.bkashTrxID,
+    if (payment.sslczBankTrxId) {
+      await sslczService.initiateRefund({
+        bank_tran_id: payment.sslczBankTrxId,
         amount: payment.amount,
-        reason: req.body.reason || "Booking cancelled",
-      });
-    } else if (payment.method === "NAGAD" && payment.bkashTrxID) {
-      await nagadService.refundTransaction({
-        paymentID: payment.merchantInvoiceNo,
-        trxID: payment.bkashTrxID,
-        amount: payment.amount,
-        reason: req.body.reason || "Booking cancelled",
+        refund_remarks: req.body.reason || "Booking cancelled",
       });
     }
 
@@ -162,3 +228,16 @@ async function refundPayment(req, res) {
     return res.status(500).json({ success: false, message: "Failed to refund payment" });
   }
 }
+
+module.exports = {
+  initiatePayment,
+  handleSuccess,
+  handleFail,
+  handleCancel,
+  handleIpn,
+  getPayment,
+  getAllPayments,
+  releasePayment,
+  refundPayment,
+  markTourCompleted,
+};

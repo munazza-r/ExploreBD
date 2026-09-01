@@ -38,3 +38,19 @@ input:focus, select:focus { outline: none; border-color: var(--primary-green); b
 .status-box { text-align: center; padding: 20px 0; }
 .receipt-box { text-align: left; background: #f4f6f8; border-radius: 8px; padding: 16px; margin-top: 16px; }
 .receipt-box p { margin: 6px 0; font-size: 14px; }
+
+/* Brand-styled payment method buttons (official colors, no logo images used) */
+.bkash-btn.active { border-color: #E2136E; background: #fdf2f7; }
+.nagad-btn.active { border-color: #F7941D; background: #fff8ef; }
+
+.brand-wordmark { font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+.bkash-wordmark { color: #E2136E; }
+.nagad-wordmark { color: #F7941D; }
+
+.btn-bkash { background-color: #E2136E; }
+.btn-bkash:hover { background-color: #b80f58; }
+.btn-nagad { background-color: #F7941D; }
+.btn-nagad:hover { background-color: #d97b0a; }
+.gateway-note { display: flex; align-items: center; gap: 8px; background: #ecfdf5; color: #047857; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 20px; }
+.btn-sslcz { background-color: #047857; }
+.btn-sslcz:hover { background-color: #065F46; }

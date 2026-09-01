@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './Payment.css';
-import { Compass, CheckCircle2 } from "lucide-react";
+import { Compass, CreditCard } from "lucide-react";
 
 const API_BASE = "http://localhost:1667/api/payments";
 
@@ -10,16 +10,36 @@ const Checkout = () => {
     touristId: "",
     guideId: "",
     amount: "",
-    method: "BKASH",
   });
-  const [status, setStatus] = useState(null); // null | "loading" | "error" | "nagad-success"
+  const [status, setStatus] = useState(null); // null | "loading" | "error"
   const [message, setMessage] = useState("");
-  const [nagadReceipt, setNagadReceipt] = useState(null);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleDigitInput = (e, maxLen) => {
+    const clean = e.target.value.replace(/\D/g, '').slice(0, maxLen);
+    setForm({ ...form, [e.target.name]: clean });
+  };
+
+  const handleAmountChange = (e) => setForm({ ...form, amount: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (form.bookingId.length !== 8) {
+      setStatus("error");
+      setMessage("Booking ID must be exactly 8 digits.");
+      return;
+    }
+    if (form.touristId.length !== 5) {
+      setStatus("error");
+      setMessage("Tourist ID must be exactly 5 digits.");
+      return;
+    }
+    if (form.guideId.length !== 4) {
+      setStatus("error");
+      setMessage("Guide ID must be exactly 4 digits.");
+      return;
+    }
+
     setStatus("loading");
     setMessage("");
 
@@ -37,16 +57,11 @@ const Checkout = () => {
         return;
       }
 
-      if (form.method === "BKASH") {
-        if (data.bkashURL) {
-          window.location.href = data.bkashURL;
-        } else {
-          setStatus("error");
-          setMessage("bKash did not return a checkout URL.");
-        }
+      if (data.gatewayURL) {
+        window.location.href = data.gatewayURL;
       } else {
-        setStatus("nagad-success");
-        setNagadReceipt(data.payment);
+        setStatus("error");
+        setMessage("Payment gateway did not return a checkout URL.");
       }
     } catch (err) {
       setStatus("error");
@@ -76,62 +91,45 @@ const Checkout = () => {
             <p style={{ color: "#dc2626", fontWeight: 600 }}>{message}</p>
           )}
 
-          {status === "nagad-success" && nagadReceipt ? (
-            <div className="status-box">
-              <CheckCircle2 size={64} color="#22c55e" style={{ margin: "0 auto" }} />
-              <h3 style={{ marginTop: 16 }}>Payment Held in Escrow</h3>
-              <p>Your Nagad payment (simulated) was successful.</p>
-              <div className="receipt-box">
-                <p><strong>Payment ID:</strong> {nagadReceipt.id}</p>
-                <p><strong>Amount:</strong> ৳{nagadReceipt.amount}</p>
-                <p><strong>Method:</strong> {nagadReceipt.method}</p>
-                <p><strong>Status:</strong> {nagadReceipt.status}</p>
-                <p><strong>Booking:</strong> {nagadReceipt.bookingId}</p>
-              </div>
+          <div className="gateway-note">
+            <CreditCard size={18} />
+            <span>Pay securely via bKash, Nagad, Rocket, or Visa/Mastercard/Amex</span>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Booking ID * (8 digits)</label>
+              <input
+                type="text" name="bookingId" required placeholder="e.g. 23555000"
+                value={form.bookingId} maxLength={8} inputMode="numeric"
+                onChange={(e) => handleDigitInput(e, 8)}
+              />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className="method-toggle">
-                <div
-                  className={`method-btn ${form.method === "BKASH" ? "active" : ""}`}
-                  onClick={() => setForm({ ...form, method: "BKASH" })}
-                >
-                  bKash
-                </div>
-                <div
-                  className={`method-btn ${form.method === "NAGAD" ? "active" : ""}`}
-                  onClick={() => setForm({ ...form, method: "NAGAD" })}
-                >
-                  Nagad
-                </div>
-              </div>
+            <div className="form-group">
+              <label>Your Tourist ID * (5 digits)</label>
+              <input
+                type="text" name="touristId" required placeholder="e.g. 12345"
+                value={form.touristId} maxLength={5} inputMode="numeric"
+                onChange={(e) => handleDigitInput(e, 5)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Guide ID * (4 digits)</label>
+              <input
+                type="text" name="guideId" required placeholder="e.g. 4567"
+                value={form.guideId} maxLength={4} inputMode="numeric"
+                onChange={(e) => handleDigitInput(e, 4)}
+              />
+            </div>
+            <div className="form-group">
+              <label>Amount (BDT) *</label>
+              <input type="number" name="amount" required min="1" placeholder="e.g. 1500" onChange={handleAmountChange} />
+            </div>
 
-              <div className="form-group">
-                <label>Booking ID *</label>
-                <input type="text" name="bookingId" required placeholder="e.g. BOOK-2026-001" onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Your Tourist ID *</label>
-                <input type="text" name="touristId" required placeholder="e.g. tourist123" onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Guide ID *</label>
-                <input type="text" name="guideId" required placeholder="e.g. guide456" onChange={handleChange} />
-              </div>
-              <div className="form-group">
-                <label>Amount (BDT) *</label>
-                <input type="number" name="amount" required min="1" placeholder="e.g. 1500" onChange={handleChange} />
-              </div>
-
-              <button type="submit" className="submit-btn" disabled={status === "loading"}>
-                {status === "loading"
-                  ? "Processing..."
-                  : form.method === "BKASH"
-                  ? "Pay with bKash"
-                  : "Pay with Nagad"}
-              </button>
-            </form>
-          )}
+            <button type="submit" className="submit-btn btn-sslcz" disabled={status === "loading"}>
+              {status === "loading" ? "Redirecting to secure checkout..." : "Proceed to Payment"}
+            </button>
+          </form>
         </div>
       </div>
     </>

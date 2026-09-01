@@ -18,6 +18,7 @@ enum PaymentStatus {
 enum PaymentMethod {
   BKASH
   NAGAD
+  SSLCOMMERZ
 }
 
 model Payment {
@@ -29,13 +30,20 @@ model Payment {
 
   amount            Float
   currency          String        @default("BDT")
-  method            PaymentMethod @default(BKASH)
+  method            PaymentMethod @default(SSLCOMMERZ)
   status            PaymentStatus @default(INITIATED)
 
   bkashPaymentID    String?       @unique
   bkashTrxID        String?
   merchantInvoiceNo String        @unique
   payerReference    String?
+
+  sslczValId        String?
+  sslczBankTrxId    String?
+  sslczCardType     String?
+
+  tourCompleted     Boolean       @default(false)
+  tourCompletedAt   DateTime?
 
   platformCommission Float?
   guideEarning        Float?

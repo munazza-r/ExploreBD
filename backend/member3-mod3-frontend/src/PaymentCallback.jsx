@@ -7,40 +7,34 @@ const API_BASE = "http://localhost:1667/api/payments";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
-  const [status, setStatus] = useState("loading"); // loading | success | failed | error
-  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("loading");
   const [payment, setPayment] = useState(null);
 
   useEffect(() => {
-    const paymentID = searchParams.get('paymentID');
-    const bkashStatus = searchParams.get('status'); // "success" | "cancel" | "failure" per bKash docs
+    const urlStatus = searchParams.get('status'); // success | fail | cancel | error
+    const paymentId = searchParams.get('paymentId');
 
-    if (!paymentID) {
-      setStatus("error");
-      setMessage("No payment reference found in the callback URL.");
+    if (urlStatus !== "success") {
+      setStatus(urlStatus || "error");
       return;
     }
 
-    const confirmPayment = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/callback?paymentID=${paymentID}&status=${bkashStatus || ''}`);
-        const data = await res.json();
+    if (!paymentId) {
+      setStatus("error");
+      return;
+    }
 
+    fetch(`${API_BASE}/${paymentId}`)
+      .then((res) => res.json())
+      .then((data) => {
         if (data.success) {
           setStatus("success");
           setPayment(data.payment);
         } else {
-          setStatus("failed");
-          setMessage(data.message || "Payment was not completed.");
-          setPayment(data.payment || null);
+          setStatus("error");
         }
-      } catch (err) {
-        setStatus("error");
-        setMessage("Could not confirm payment with the server.");
-      }
-    };
-
-    confirmPayment();
+      })
+      .catch(() => setStatus("error"));
   }, [searchParams]);
 
   return (
@@ -50,9 +44,7 @@ const PaymentCallback = () => {
           <Compass size={22} color="#bbf7d0" />
           Explore<span style={{ color: "#34D399" }}>BD</span>
         </div>
-        <div className="nav-links">
-          <span>Dashboard</span>
-        </div>
+        <div className="nav-links"><span>Dashboard</span></div>
         <div className="avatar-circle">MR</div>
       </nav>
 
@@ -79,17 +71,19 @@ const PaymentCallback = () => {
                     <p><strong>Payment ID:</strong> {payment.id}</p>
                     <p><strong>Amount:</strong> ৳{payment.amount}</p>
                     <p><strong>Status:</strong> {payment.status}</p>
-                    <p><strong>Transaction ID:</strong> {payment.bkashTrxID}</p>
+                    <p><strong>Card/Method:</strong> {payment.sslczCardType || "N/A"}</p>
                   </div>
                 )}
               </>
             )}
 
-            {(status === "failed" || status === "error") && (
+            {(status === "fail" || status === "cancel" || status === "error") && (
               <>
                 <XCircle size={64} color="#dc2626" style={{ margin: "0 auto" }} />
-                <h3 style={{ marginTop: 16 }}>Payment Not Completed</h3>
-                <p>{message}</p>
+                <h3 style={{ marginTop: 16 }}>
+                  {status === "cancel" ? "Payment Cancelled" : "Payment Not Completed"}
+                </h3>
+                <p>You can try again from the checkout page.</p>
               </>
             )}
 
