@@ -1,29 +1,30 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const {
+  sendVerificationReceivedEmail,
+  sendVerificationResultEmail,
+} = require('../services/emailService');
 
 const submitVerification = async (req, res) => {
   try {
-    const { universityName, studentIdNumber, nidOrPassportNumber } = req.body;
+    const { email, universityName, studentIdNumber, nidOrPassportNumber } = req.body;
 
     if (!/^\d{8}$/.test(studentIdNumber)) {
       return res.status(400).json({ error: "Student ID must be exactly 8 digits." });
     }
-
     if (!/^\d{12}$/.test(nidOrPassportNumber)) {
       return res.status(400).json({ error: "NID must be exactly 12 digits." });
     }
-
     if (!req.files || !req.files['studentIdCard'] || !req.files['nidOrPassport']) {
       return res.status(400).json({ error: "Both Student ID and NID/Passport images are required." });
     }
 
-
-    // Store just the filename, not the full absolute path
     const studentIdCardUrl = req.files['studentIdCard'][0].filename;
     const nidOrPassportUrl = req.files['nidOrPassport'][0].filename;
 
     const verificationRecord = await prisma.guideVerification.create({
       data: {
+        email,
         universityName,
         studentIdNumber,
         studentIdCardUrl,
@@ -31,6 +32,9 @@ const submitVerification = async (req, res) => {
         nidOrPassportUrl
       }
     });
+
+    // Notify the guide their documents were received
+    sendVerificationReceivedEmail(email, universityName);
 
     res.status(201).json({
       message: "Documents securely uploaded and saved to the database!",
@@ -43,7 +47,6 @@ const submitVerification = async (req, res) => {
   }
 };
 
-// Admin: get all verification requests (for the dashboard table)
 const getAllVerifications = async (req, res) => {
   try {
     const records = await prisma.guideVerification.findMany({
@@ -56,11 +59,10 @@ const getAllVerifications = async (req, res) => {
   }
 };
 
-// Admin: approve or reject a specific request
 const updateVerificationStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, rejectionReason } = req.body; // status: "APPROVED" | "REJECTED" | "PENDING"
+    const { status, rejectionReason } = req.body;
 
     if (!["PENDING", "APPROVED", "REJECTED"].includes(status)) {
       return res.status(400).json({ error: "Invalid status value." });
@@ -75,6 +77,11 @@ const updateVerificationStatus = async (req, res) => {
       }
     });
 
+    // Notify the guide of the admin's decision
+    if (status === "APPROVED" || status === "REJECTED") {
+      sendVerificationResultEmail(updated.email, status, updated.rejectionReason);
+    }
+
     res.status(200).json({ message: "Status updated.", data: updated });
   } catch (error) {
     console.error("Database Error:", error);
@@ -82,7 +89,6 @@ const updateVerificationStatus = async (req, res) => {
   }
 };
 
-// User: check status of their own submitted request (for polling)
 const getVerificationStatus = async (req, res) => {
   try {
     const { id } = req.params;
