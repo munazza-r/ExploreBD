@@ -42,7 +42,7 @@ export default function ExploreGuides() {
       // Only send filters that are actually set, so we don't over-filter
       const payload = {};
       if (filters.location) payload.location = filters.location;
-      if (filters.languages.length > 0) payload.language = filters.languages[0]; // backend matches one language at a time
+      if (filters.languages.length > 0) payload.languages = filters.languages; // send all selected languages
       if (Number(filters.minRating) > 0) payload.minRating = filters.minRating;
       if (Number(filters.minExperience) > 0) payload.minExperience = filters.minExperience;
       payload.maxBudget = filters.maxBudget;

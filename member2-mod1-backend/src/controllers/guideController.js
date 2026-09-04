@@ -49,15 +49,15 @@ async function getGuides(req, res) {
 // The core feature: filter guides by location, language, rating, experience, budget
 async function searchGuides(req, res) {
   try {
-    const { location, language, minRating, minExperience, maxBudget } = req.body;
+    const { location, languages, minRating, minExperience, maxBudget } = req.body;
 
     const filters = {};
 
     if (location) {
       filters.location = { contains: location, mode: "insensitive" };
     }
-    if (language) {
-      filters.languages = { has: language };
+    if (languages && languages.length > 0) {
+      filters.languages = { hasSome: languages }; // matches guides who speak at least one of the selected languages
     }
     if (minRating !== undefined) {
       filters.rating = { gte: Number(minRating) };

@@ -57,7 +57,7 @@ export default function FilterSidebar({ filters, setFilters, onApply, onReset })
         <option value="0">Any</option>
         <option value="3">3 stars & up</option>
         <option value="4">4 stars & up</option>
-        <option value="4.5">4.5 stars & up</option>
+        <option value="5">5 stars</option>
       </select>
 
       {/* Budget */}
