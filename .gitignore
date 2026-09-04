@@ -12,6 +12,13 @@ yarn.lock
 .env.development
 .env.production
 .env.*.local
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+*.pem
+*.key
+credentials*.json
 backend/.env
 frontend/.env
 backend/data/local-db.json

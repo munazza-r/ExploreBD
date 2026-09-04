@@ -1,5 +1,12 @@
 {
-  "name": "explorebd",
+  "name": "explorebd-integrated",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "scripts": {
+    "setup": "npm install --prefix mod-1/CSE471-project/member3-mod1-backend && npm install --prefix mod-2/frontend && npm install --prefix mod-3/frontend",
+    "build": "npm --prefix mod-2/frontend run build && npm --prefix mod-3/frontend run build",
+    "dev": "npm run build && npm --prefix mod-1/CSE471-project/member3-mod1-backend run dev",
+    "start": "npm --prefix mod-1/CSE471-project/member3-mod1-backend start",
+    "test": "npm --prefix mod-1/CSE471-project/member3-mod1-backend test && npm run build"
+  }
 }

@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "DM Sans", Inter, ui-sans-serif, system-ui, sans-serif;
+  color: #17211f;
+  background: #f4f8f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; scroll-behavior: smooth; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+button, input, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+.font-display { font-family: "Manrope", "DM Sans", ui-sans-serif, system-ui, sans-serif; }
+
+.hero-grid::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  opacity: 0.16;
+  background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(to bottom, black, transparent 86%);
+}
+
+.ticket-divider::before,
+.ticket-divider::after {
+  position: absolute;
+  left: -14px;
+  width: 28px;
+  height: 28px;
+  content: "";
+  border-radius: 999px;
+  background: #f4f8f6;
+  box-shadow: inset -1px 0 0 #e2e8f0;
+}
+.ticket-divider::before { top: -14px; }
+.ticket-divider::after { bottom: -14px; }
+#qr-camera-reader video { width: 100% !important; height: 100% !important; object-fit: cover !important; border-radius: 24px; }
+#qr-camera-reader img { display: none !important; }
+#qr-camera-reader > div { border: 0 !important; }
+.scan-line { animation: scan 2.2s ease-in-out infinite; }
+.animate-rise { animation: rise 0.35s ease-out both; }
+
+@keyframes scan {
+  0%, 100% { transform: translateY(-105px); opacity: 0.45; }
+  50% { transform: translateY(105px); opacity: 1; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 1023px) {
+  .ticket-divider::before, .ticket-divider::after { top: -14px; left: auto; box-shadow: inset 0 -1px 0 #e2e8f0; }
+  .ticket-divider::before { left: -14px; }
+  .ticket-divider::after { right: -14px; }
+}
+
+@media print {
+  body { background: white; }
+  .hero-grid { padding-bottom: 6rem; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  main { max-width: 100% !important; padding-bottom: 0 !important; }
+  .ticket-shell { box-shadow: none; break-inside: avoid; }
+  main > *:not(.ticket-shell) { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+}
