@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-main: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: #f0fdf4;
+  color: #0f172a;
+  background-image: radial-gradient(rgba(5, 150, 105, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.font-serif-title {
+  font-family: 'Plus Jakarta Sans', var(--font-main);
+  letter-spacing: -0.02em;
+}
+
+/* Travel Background Overlay */
+.travel-bg-overlay {
+  background: linear-gradient(135deg, rgba(4, 120, 87, 0.95) 0%, rgba(5, 150, 105, 0.9) 50%, rgba(13, 148, 136, 0.95) 100%),
+              url('../images/sundarban.jpg') center/cover no-repeat;
+}
+
+.auth-bg-overlay {
+  background: linear-gradient(135deg, rgba(2, 44, 34, 0.92) 0%, rgba(4, 120, 87, 0.88) 50%, rgba(15, 23, 42, 0.94) 100%),
+              url('../images/coxsbazar.jpg') center/cover no-repeat;
+}
+
+/* Card glassmorphism */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.day-pill {
+  transition: all 0.2s ease-in-out;
+}
+
+.day-pill:hover {
+  transform: translateY(-1px);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #059669;
+  border-radius: 4px;
+}
