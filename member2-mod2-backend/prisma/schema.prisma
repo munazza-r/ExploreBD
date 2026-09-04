@@ -1,0 +1,41 @@
+// Module 2 - Feature 2: Google Maps-Based Meeting Point & Route Visualization System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Meeting {
+  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
+  touristName          String
+  guideName            String
+  tourDetails          String
+  touristLocation      String
+  guideLocation        String
+  suggestedPoints      Json?     // full list generated at booking confirmation
+  guideApprovedPoints  Json?     // subset the guide approved (or the auto-fallback picks)
+  approvalRequestedAt  DateTime? // when suggestions were sent to the guide - starts the fallback timer
+  usedFallback         Boolean   @default(false) // true if the guide didn't respond in time
+  meetingPoint         String?
+  distance             String?
+  duration             String?
+  traffic              String?
+  status               String    @default("Awaiting Guide Approval")
+  // "Awaiting Guide Approval" -> "Approved" (or "Fallback Used") -> "Confirmed"
+  createdAt            DateTime  @default(now())
+}
+
+// Guide's pre-configured fallback meeting points for major areas in their city.
+// Used automatically if the guide doesn't approve suggestions within the time window.
+model GuideFallbackPoint {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  guideName String
+  area      String   // e.g. "Dhaka", "Chittagong" - the city/region this point serves
+  pointName String   // e.g. "Shahbagh"
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+}
