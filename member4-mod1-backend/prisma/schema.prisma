@@ -1,0 +1,35 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum PackageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+type IncludedPlace {
+  place String
+  day   Int
+}
+
+model TourPackage {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  price       Float
+  duration    Int             // duration in days
+  places      IncludedPlace[] // each place tagged with which day it's visited
+  coverPhoto  String?         // URL to cover image, optional
+  status      PackageStatus   @default(DRAFT)
+  guideId     String          // placeholder link to Guide model, connected properly at merge time
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
