@@ -161,7 +161,7 @@ export default function BookingPage() {
 
       <div className="bg-gradient-to-r from-green-700 to-green-500 px-8 py-10 text-white">
         <h1 className="text-3xl font-bold mb-1">My bookings</h1>
-        <p className="text-green-50">Send new requests, or edit and cancel ones that are still pending</p>
+        <p className="text-green-50">Send new requests or edit and cancel ones that are still pending</p>
       </div>
 
       <div className="max-w-5xl mx-auto px-8 py-8 grid grid-cols-3 gap-8">
