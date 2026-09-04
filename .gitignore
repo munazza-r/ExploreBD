@@ -3,7 +3,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 yarn.lock
 
 # ─── Environment / Secrets ─────────────────────────
@@ -66,4 +65,10 @@ prisma/migrations/
 # frontend/images/*.jpg  # uncomment if images are too big for GitHub
 
 # ─── Nested / Other Repos ────────────────────────
-CSE471-project/
+# Local backups of Git metadata removed from formerly nested repositories.
+# Keeping these out of the parent repository prevents modules from becoming
+# submodules/gitlinks again while preserving their local history if needed.
+.nested-git-backups/
+
+# Runtime uploads are local data and should not be committed.
+attachments/

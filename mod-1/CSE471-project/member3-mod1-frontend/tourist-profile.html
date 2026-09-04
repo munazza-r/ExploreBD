@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-check-pending">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tourist Profile | ExploreBD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+    .auth-check-pending body { visibility: hidden; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-900">
+  <nav class="sticky top-0 z-50 border-b border-slate-800" style="background:rgba(3,40,22,0.97);backdrop-filter:blur(16px);">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
+      <a href="index.html" class="flex items-center space-x-3 group">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-800 to-teal-600 text-white shadow-md">
+          <i data-lucide="compass" class="h-6 w-6 text-emerald-200"></i>
+        </div>
+        <div class="flex flex-col"><span class="text-xl font-extrabold tracking-tight text-white">Explore<span class="text-emerald-400">BD</span></span><span class="-mt-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200/70">Smart Tourist Platform</span></div>
+      </a>
+      <div class="flex items-center gap-2 text-xs font-semibold">
+        <a href="index.html" class="rounded-lg px-3 py-2 text-white/70 hover:bg-white/10 hover:text-white">Home</a>
+        <a href="tourist-profile.html" class="rounded-lg border-b-2 border-emerald-300 bg-emerald-300/10 px-3 py-2 text-emerald-300">My Profile</a>
+        <a href="/messages/" class="rounded-lg px-3 py-2 text-white/70 hover:bg-white/10 hover:text-white">Messages</a>
+        <a href="/qr/" class="rounded-lg px-3 py-2 text-white/70 hover:bg-white/10 hover:text-white">My QR Pass</a>
+        <button onclick="logout()" class="rounded-lg px-3 py-2 text-white/70 hover:bg-white/10 hover:text-white">Sign Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <header class="bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800 px-4 pb-24 pt-10 text-white sm:px-8">
+    <div class="mx-auto max-w-6xl">
+      <span class="rounded-full border border-emerald-300/30 bg-emerald-300/10 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-emerald-200">Tourist Account</span>
+      <h1 class="mt-4 text-3xl font-extrabold">Welcome, <span id="touristName">Tourist</span></h1>
+      <p class="mt-2 text-sm text-emerald-100/80">Your messages and booking QR pass are connected to this profile.</p>
+    </div>
+  </header>
+
+  <main class="mx-auto -mt-16 max-w-6xl px-4 pb-20 sm:px-8">
+    <section class="grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
+      <article class="rounded-3xl border border-slate-200 bg-white p-7 shadow-xl">
+        <div id="touristInitials" class="flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-800 text-xl font-extrabold text-white">T</div>
+        <h2 id="profileName" class="mt-5 text-xl font-extrabold text-slate-900">Tourist</h2>
+        <p id="profileEmail" class="mt-1 text-xs text-slate-500"></p>
+        <dl class="mt-6 space-y-4 border-t border-slate-100 pt-5 text-xs">
+          <div class="flex justify-between gap-4"><dt class="font-semibold text-slate-400">Country</dt><dd id="profileCountry" class="font-bold text-slate-700">Bangladesh</dd></div>
+          <div class="flex justify-between gap-4"><dt class="font-semibold text-slate-400">City</dt><dd id="profileCity" class="font-bold text-slate-700">—</dd></div>
+          <div class="flex justify-between gap-4"><dt class="font-semibold text-slate-400">Language</dt><dd id="profileLanguage" class="font-bold text-slate-700">—</dd></div>
+        </dl>
+      </article>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <a href="/messages/" class="group rounded-3xl border border-slate-200 bg-white p-7 shadow-lg transition hover:-translate-y-1 hover:border-emerald-300">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600"><i data-lucide="message-circle" class="h-6 w-6"></i></span>
+          <h2 class="mt-5 text-lg font-extrabold text-slate-900">Guide messages</h2>
+          <p class="mt-2 text-xs leading-6 text-slate-500">Read messages sent by guides and reply from the same secure conversation.</p>
+          <span class="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-emerald-700">Open Messages <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+        <a href="/qr/" class="group rounded-3xl border border-slate-200 bg-white p-7 shadow-lg transition hover:-translate-y-1 hover:border-emerald-300">
+          <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><i data-lucide="qr-code" class="h-6 w-6"></i></span>
+          <h2 class="mt-5 text-lg font-extrabold text-slate-900">My booking QR</h2>
+          <p class="mt-2 text-xs leading-6 text-slate-500">Generate, download, or print your personal paid-booking verification pass.</p>
+          <span class="mt-5 inline-flex items-center gap-2 text-xs font-extrabold text-emerald-700">View QR Pass <i data-lucide="arrow-right" class="h-4 w-4"></i></span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const AUTH_STORAGE_KEY = 'explorebdAuth';
+    let authState;
+    try { authState = JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY)); } catch { authState = null; }
+
+    if (!authState?.token || authState?.user?.role !== 'TOURIST') {
+      window.location.replace('login.html');
+    } else {
+      const user = authState.user;
+      const initials = user.name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
+      document.getElementById('touristName').textContent = user.name;
+      document.getElementById('profileName').textContent = user.name;
+      document.getElementById('profileEmail').textContent = user.email;
+      document.getElementById('profileCountry').textContent = user.country || 'Bangladesh';
+      document.getElementById('profileCity').textContent = user.city || '—';
+      document.getElementById('profileLanguage').textContent = user.primaryLanguage || '—';
+      document.getElementById('touristInitials').textContent = initials || 'T';
+      document.documentElement.classList.remove('auth-check-pending');
+    }
+
+    function logout() {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      window.location.replace('login.html');
+    }
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>My Profile | ExploreBD</title></head>
+<body>
+  <script>
+    try {
+      const auth = JSON.parse(localStorage.getItem('explorebdAuth'));
+      window.location.replace(auth?.user?.role === 'GUIDE'
+        ? 'guide-profile.html'
+        : auth?.user?.role === 'TOURIST' ? 'tourist-profile.html' : 'login.html');
+    } catch {
+      localStorage.removeItem('explorebdAuth');
+      window.location.replace('login.html');
+    }
+  </script>
+</body>
+</html>

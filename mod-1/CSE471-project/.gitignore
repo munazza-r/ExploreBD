@@ -1,0 +1,61 @@
+# ─── Node / NPM ───────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+
+# ─── Environment / Secrets ─────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+.env.*.local
+backend/.env
+frontend/.env
+backend/data/local-db.json
+backend/data/local-db.json.tmp
+
+# ─── Build / Cache ─────────────────────────────────
+dist/
+build/
+.next/
+.nuxt/
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# ─── Logs ─────────────────────────────────────────
+logs/
+*.log
+
+# ─── OS / System ──────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ─── IDE / Editor ─────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ─── Vercel ───────────────────────────────────────
+.vercel/
+
+# ─── MongoDB / Prisma ─────────────────────────────
+prisma/migrations/
+
+# ─── Uploads / Media (keep structure, ignore files) ─
+# frontend/images/*.jpg  # uncomment if images are too big for GitHub
+attachments/
+
+# ─── Nested / Other Repos ────────────────────────
