@@ -1,0 +1,23 @@
+// Module 3 - Feature 2: Payment Release & Commission Management System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Payment {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  touristName       String
+  guideName         String
+  tourDetails       String
+  totalAmount       Int      // full amount the tourist paid, held in escrow
+  commissionPercent Int      @default(15)
+  commissionAmount  Int      @default(0) // calculated when released
+  payoutAmount      Int      @default(0) // calculated when released (totalAmount - commissionAmount)
+  status            String   @default("IN_ESCROW") // IN_ESCROW | RELEASED
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+}
