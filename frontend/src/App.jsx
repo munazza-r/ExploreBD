@@ -25,6 +25,8 @@ import SupportPage from "./pages/SupportPage";
 import AdminRequestsPage from "./pages/AdminRequestsPage";
 import PaymentCallbackPage from "./pages/PaymentCallbackPage";
 
+import GuideDetailPage from "./pages/GuideDetailPage";
+
 function App() {
   return (
     <AuthProvider>
@@ -37,6 +39,8 @@ function App() {
 
           {/* Available to any logged-in user */}
           <Route path="/guides" element={<ProtectedRoute><ExploreGuides /></ProtectedRoute>} />
+          <Route path="/guides" element={<ProtectedRoute><ExploreGuides /></ProtectedRoute>} />
+          <Route path="/guides/:id" element={<ProtectedRoute><GuideDetailPage /></ProtectedRoute>} />
           <Route path="/bookings" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
           <Route path="/messages" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
           <Route path="/support" element={<ProtectedRoute><SupportPage /></ProtectedRoute>} />
