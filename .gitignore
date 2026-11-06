@@ -1,3 +1,4 @@
+
 node_modules
 node_modules/
 dist
@@ -88,4 +89,4 @@ vite.config.ts.timestamp-*
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+

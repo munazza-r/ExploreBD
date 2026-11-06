@@ -1,0 +1,308 @@
+// ExploreBD - Unified Prisma schema
+// NOTE: The User/auth model lives in Mongoose (src/models/User.js), NOT here.
+// Every other feature's data model will be added here one at a time as we
+// integrate each feature into this unified backend.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Models will be added here in the next steps, one feature at a time.
+
+// Merged from Member 2's search-facing Guide model + Member 3's GuideProfile model.
+// One guide = one record, covering both "what tourists search/filter by" and
+// "what the guide themselves manages in their profile settings."
+model Guide {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String?  @unique // links to the real Mongoose User._id once the guide has an account
+  name               String
+  location           String   @default("Bangladesh")
+  languages          String[] @default(["Bengali"])
+  bio                String   @default("")
+
+  // Search/filter fields (Member 2)
+  rating             Float    @default(0)
+  reviewCount        Int      @default(0)
+  experience         Int      @default(0) // years
+  budget             Int      @default(500) // hourly rate in taka - same value the guide sets in their profile
+  availability       String   @default("Available") // "Available" | "Busy"
+  verified           Boolean  @default(false)
+  imageUrl           String?
+
+  // Profile-management fields (Member 3)
+  platformFeePercent Int      @default(12)
+  toursDone          Int      @default(0)
+  repeatClientRate   Float    @default(0)
+  isPublic           Boolean  @default(true)
+  isTopRated         Boolean  @default(false)
+  specialties        String[] @default([])
+  availableDays      String[] @default([])
+  startTime          String   @default("10:00 A.M")
+  endTime            String   @default("06:00 P.M")
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tourPackages       TourPackage[]
+}
+
+// Member 1's Student Guide Verification & Document Auditing System.
+// FIX from the original: the original schema was missing "email" (the
+// controller referenced it but it wasn't a real field - this would have
+// crashed). Also added userId, linking each submission to the real logged-in
+// guide instead of trusting a client-supplied email/name.
+model GuideVerification {
+  id                  String             @id @default(auto()) @map("_id") @db.ObjectId
+  userId              String             @unique // the submitting guide's real User._id (Mongoose)
+  email               String
+  universityName      String
+  studentIdNumber     String
+  studentIdCardUrl    String             // Path to uploaded student ID image
+  nidOrPassportNumber String
+  nidOrPassportUrl    String             // Path to uploaded NID/Passport image
+  status              String             @default("PENDING") // PENDING | APPROVED | REJECTED
+  rejectionReason     String?
+  submittedAt         DateTime           @default(now())
+  reviewedAt          DateTime?
+}
+// Member 1's Tourist Booking & Scheduling System - the canonical Booking model.
+// touristName/guideName stay as plain strings for now (matching the rest of the
+// project's convention); linking these to real User/Guide records is a later
+// integration step, not required for this phase.
+model Booking {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  touristName String
+  guideName   String
+  packageName String
+  date        DateTime
+  time        String
+  status      String   @default("PENDING") // PENDING | booked-<GuideName> | CANCELLED
+  createdAt   DateTime @default(now())
+
+  @@index([guideName, date, time])
+}
+
+// Member 4's Tour Package Management System.
+// guideId is now a REAL relation to Guide (not possible before, when these
+// lived in separate Prisma schemas) - connected properly as promised in the
+// original schema's comment.
+type IncludedPlace {
+  place String
+  day   Int
+}
+
+model TourPackage {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  price       Float
+  duration    Int             // duration in days
+  places      IncludedPlace[] // each place tagged with which day it's visited
+  coverPhoto  String?
+  status      String        @default("DRAFT") // DRAFT | PUBLISHED
+  guideId     String        @db.ObjectId
+  guide       Guide         @relation(fields: [guideId], references: [id])
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+// Member 2's Google Maps-Based Meeting Point & Route Visualization System.
+model Meeting {
+  id                   String    @id @default(auto()) @map("_id") @db.ObjectId
+  touristName          String
+  guideName            String
+  tourDetails          String
+  touristLocation      String
+  guideLocation        String
+  suggestedPoints      Json?     // full list generated at booking confirmation
+  guideApprovedPoints  Json?     // subset the guide approved (or the auto-fallback picks)
+  approvalRequestedAt  DateTime? // when suggestions were sent to the guide - starts the fallback timer
+  usedFallback         Boolean   @default(false)
+  meetingPoint         String?
+  distance             String?
+  duration             String?
+  traffic              String?
+  status               String    @default("Awaiting Guide Approval")
+  // "Awaiting Guide Approval" -> "Approved" (or "Fallback Used") -> "Confirmed"
+  createdAt            DateTime  @default(now())
+}
+
+// Guide's pre-configured fallback meeting points for major areas in their city.
+model GuideFallbackPoint {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  guideName String
+  area      String
+  pointName String
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+}
+
+// Member 3's Secure In-App Chat & Communication Portal (Version B - the one with real frontend pages).
+model Message {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String
+  senderName     String
+  senderRole     String   // "TOURIST" | "GUIDE"
+  content        String
+  wasFiltered    Boolean  @default(false) // true if a phone number was blocked from this message
+  createdAt      DateTime @default(now())
+}
+
+// Member 4's Smart Itinerary Builder & AI Guide Recommendation System.
+model ItineraryRequest {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  destination String
+  tripLength  Int
+  budget      Int
+  interests   String[]
+  itinerary   Json
+  guides      Json
+  createdAt   DateTime @default(now())
+}
+// Combined Module 3 Feature: Escrow-Based Payment Gateway (Member 1) +
+// Payment Release & Commission Management (Member 2) - one lifecycle, one model.
+enum PaymentStatus {
+  INITIATED
+  ESCROW_HELD
+  RELEASED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  BKASH
+  NAGAD
+  SSLCOMMERZ
+}
+
+model Payment {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId
+
+  bookingId         String
+  touristId         String        // real Mongoose User._id of the tourist
+  guideId           String        // real Guide.id (Prisma) of the guide
+
+  amount            Float
+  currency          String        @default("BDT")
+  method            PaymentMethod @default(SSLCOMMERZ)
+  status            PaymentStatus @default(INITIATED)
+
+  bkashPaymentID    String?
+  bkashTrxID        String?
+  merchantInvoiceNo String        @unique
+  payerReference    String?
+
+  sslczValId        String?
+  sslczBankTrxId    String?
+  sslczCardType     String?
+
+  tourCompleted     Boolean       @default(false)
+  tourCompletedAt   DateTime?
+
+  platformCommission Float?
+  guideEarning        Float?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("payments")
+}
+
+// Member 3's QR-Based Booking Verification System.
+// Adapted to reference the REAL Booking and Payment models instead of a
+// separate demo Booking - one booking, one lifecycle, no duplicate data.
+model QrPass {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId  String    @unique
+  passCode   String    @unique
+  status     String    @default("ACTIVE") // ACTIVE | CHECKED_IN | REVOKED
+  issuedAt   DateTime  @default(now())
+  expiresAt  DateTime
+  verifiedAt DateTime?
+  verifiedBy String?   // the guide's real User._id who scanned it
+  createdAt  DateTime  @default(now())
+}
+
+// Member 4's Booking Cancellation, Refund & Emergency Support System.
+enum RequestKind {
+  CANCELLATION
+  COMPENSATION_CLAIM
+}
+
+enum CancellationInitiator {
+  TOURIST
+  GUIDE
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ResolutionType {
+  REFUND
+  REASSIGNMENT
+}
+
+enum ClaimCategory {
+  NO_SHOW
+  INCOMPLETE_TOUR
+  SERVICE_QUALITY_ISSUE
+  SAFETY_CONCERN
+}
+
+model CancellationRequest {
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  requestKind         RequestKind
+  bookingId           String
+  initiatedBy         CancellationInitiator
+  requesterId         String
+  reason              String
+  bookingDate         DateTime
+  totalPrice          Float
+
+  resolutionType      ResolutionType?
+  suggestedGuideId    String?
+  suggestedGuideName  String?
+  refundAmount        Float?
+  compensationAmount  Float?
+
+  category            ClaimCategory?
+  claimAmount         Float?
+
+  status              RequestStatus         @default(PENDING)
+  policySnapshot      String?
+
+  resolvedBy          String?
+  resolvedAt          DateTime?
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@map("CancellationRequest")
+}
+
+model SosRequest {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  bookingId     String
+  initiatedBy   String
+  requesterId   String
+  category      String
+  contactNumber String
+  claimDetails  String
+  status        RequestStatus @default(PENDING)
+
+  resolvedBy    String?
+  resolvedAt    DateTime?
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("SosRequest")
+}
