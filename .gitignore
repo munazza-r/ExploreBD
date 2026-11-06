@@ -89,5 +89,4 @@ vite.config.ts.timestamp-*
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 
