@@ -66,7 +66,7 @@ Google Maps, Gemini and SSLCOMMERZ keys are optional for local testing. The meet
 
 | Member | Features |
 |---|---|
-| (**Munazza Binte Rafiq**)[https://github.com/munazza-r] | Smart guide matching, Google Maps meeting points, payment release and commission |
-| (Md. Muntasir Rahman Layek)[https://github.com/MRL-World] | Guide profiles and auth, in-app chat, QR booking verification |
-| (Taseen Nujaira)[https://github.com/taseennujaira-sys] | Tour packages, AI itinerary builder, cancellations, refunds and SOS |
+| [**Munazza Binte Rafiq**](https://github.com/munazza-r) | Smart guide matching, Google Maps meeting points, payment release and commission |
+| [Md. Muntasir Rahman Layek](https://github.com/MRL-World) | Guide profiles and auth, in-app chat, QR booking verification |
+| [Taseen Nujaira](https://github.com/taseennujaira-sys) | Tour packages, AI itinerary builder, cancellations, refunds and SOS |
 | Mohammad Asif Al Mahfuz | Guide verification, booking and scheduling, escrow payments |
