@@ -2,9 +2,9 @@
 
 ExploreBD is a web marketplace that connects tourists in Bangladesh with verified student and local guides. Tourists can find a guide, book a tour, pay securely and plan their trip in one place. Guides get a structured way to earn from their language skills and local knowledge.
 
-**Website link** [cse-471-project-delta.vercel.app](https://cse-471-project-delta.vercel.app)
+**Website link** [ExploreBD](https://cse-471-project-delta.vercel.app)
 
-> Built for the course CSE471: System Analysis and Design, BRAC University.
+Built for the course CSE471: System Analysis and Design, BRAC University.
 
 ## Features
 
